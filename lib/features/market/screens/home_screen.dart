@@ -154,26 +154,31 @@ class _HomeContent extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
+        titleSpacing: 8,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: AppTheme.accentPurple.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(
                 Icons.whatshot, 
                 color: AppTheme.accentPurple,
-                size: 20,
+                size: 16,
               ),
             ),
-            const SizedBox(width: 8),
-            const Text(
-              'Purple Tomato',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 6),
+            const Flexible(
+              child: Text(
+                'Purple Tomato',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -181,16 +186,18 @@ class _HomeContent extends ConsumerWidget {
         actions: [
           // AI Assistant button
           IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             icon: Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 color: AppTheme.accentPurple.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(
                 Icons.psychology,
                 color: AppTheme.accentPurple,
-                size: 20,
+                size: 16,
               ),
             ),
             onPressed: () {
@@ -202,39 +209,38 @@ class _HomeContent extends ConsumerWidget {
           ),
           // Refresh button
           IconButton(
-            icon: const Icon(Icons.refresh),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            icon: const Icon(Icons.refresh, size: 20),
             onPressed: () {
               ref.invalidate(indexQuotesProvider);
             },
           ),
-          // Market status indicator - minimal modern design
+          // Market status indicator - compact
           Container(
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppTheme.surfaceDefault,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Pulsing dot when market open
-                _isMarketOpen()
-                    ? _PulsingDot(color: AppTheme.profitGreen)
-                    : Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: AppTheme.textTertiary.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                const SizedBox(width: 8),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.textTertiary.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  _isMarketOpen() ? 'NSE' : 'Closed',
+                  _isMarketOpen() ? 'NSE' : 'Off',
                   style: TextStyle(
                     color: _isMarketOpen() ? AppTheme.textPrimary : AppTheme.textTertiary,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
