@@ -1,5 +1,5 @@
-name: virtual_trading_app
-description: A virtual trading application with real-time market data from Upstox API.
+name: purple_tomato
+description: Purple Tomato - Virtual stock trading app with real-time market data.
 publish_to: 'none'
 version: 1.0.0+1
 
