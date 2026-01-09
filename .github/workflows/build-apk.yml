@@ -1,4 +1,4 @@
-name: Build Android APK
+name: GitHub Actions workflow for APK builds
 
 on:
   push:
