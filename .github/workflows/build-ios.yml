@@ -25,17 +25,24 @@ jobs:
       run: flutter pub get
     
     - name: Build iOS (Simulator)
-      run: |
-        flutter build ios --debug --simulator --no-codesign
+      run: flutter build ios --debug --simulator --no-codesign
     
-    - name: Compress iOS App
+    - name: Find and package .app for Appetize
       run: |
-        cd build/ios/iphonesimulator
-        zip -r ../../../purple-tomato-ios-simulator.zip Runner.app
+        # Find the .app bundle
+        APP_PATH=$(find build/ios -name "*.app" -type d | head -1)
+        echo "Found app at: $APP_PATH"
+        
+        # Create a zip with .app at root level (required by Appetize)
+        cd "$(dirname "$APP_PATH")"
+        zip -r "$GITHUB_WORKSPACE/purple-tomato-ios.zip" "$(basename "$APP_PATH")"
+        
+        echo "Created zip at: $GITHUB_WORKSPACE/purple-tomato-ios.zip"
+        unzip -l "$GITHUB_WORKSPACE/purple-tomato-ios.zip" | head -20
     
-    - name: Upload iOS Simulator App
+    - name: Upload iOS App for Appetize
       uses: actions/upload-artifact@v4
       with:
-        name: purple-tomato-ios-simulator
-        path: purple-tomato-ios-simulator.zip
+        name: purple-tomato-ios
+        path: purple-tomato-ios.zip
         retention-days: 30
