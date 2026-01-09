@@ -186,8 +186,8 @@ class _HomeContent extends ConsumerWidget {
         actions: [
           // AI Assistant button
           IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             icon: Container(
               padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
@@ -209,16 +209,16 @@ class _HomeContent extends ConsumerWidget {
           ),
           // Refresh button
           IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             icon: const Icon(Icons.refresh, size: 20),
             onPressed: () {
               ref.invalidate(indexQuotesProvider);
             },
           ),
-          // Market status indicator - compact
+          // Market status indicator
           Container(
-            margin: const EdgeInsets.only(right: 8),
+            margin: const EdgeInsets.only(right: 8, left: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppTheme.surfaceDefault,
@@ -237,9 +237,9 @@ class _HomeContent extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _isMarketOpen() ? 'NSE' : 'Off',
+                  _isMarketOpen() ? 'Open' : 'Closed',
                   style: TextStyle(
-                    color: _isMarketOpen() ? AppTheme.textPrimary : AppTheme.textTertiary,
+                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.textTertiary,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
