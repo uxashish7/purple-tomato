@@ -24,6 +24,9 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
     
+    - name: Generate app icons
+      run: dart run flutter_launcher_icons
+    
     - name: Build iOS (Simulator)
       run: flutter build ios --debug --simulator --no-codesign
     
