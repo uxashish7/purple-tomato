@@ -364,6 +364,7 @@ class _HomeContent extends ConsumerWidget {
                 labels: const ['Start', 'Now'],
                 startValue: wallet.initialBalance,
                 currentValue: totalPortfolioValue,
+                hasHoldings: holdings.isNotEmpty,
               ),
               
               const SizedBox(height: 24),
@@ -1068,7 +1069,7 @@ class _RecentTransactionsSection extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${order.timestamp.hour}:${order.timestamp.minute.toString().padLeft(2, '0')}',
+                        DateFormat('h:mm a').format(order.timestamp),
                         style: TextStyle(
                           color: AppTheme.textMuted,
                           fontSize: 10,

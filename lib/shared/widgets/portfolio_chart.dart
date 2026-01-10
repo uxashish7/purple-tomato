@@ -8,6 +8,7 @@ class PortfolioChart extends StatefulWidget {
   final List<String> labels;
   final double? startValue;
   final double? currentValue;
+  final bool hasHoldings;
 
   const PortfolioChart({
     super.key,
@@ -15,6 +16,7 @@ class PortfolioChart extends StatefulWidget {
     required this.labels,
     this.startValue,
     this.currentValue,
+    this.hasHoldings = true,
   });
 
   @override
@@ -147,8 +149,13 @@ class _PortfolioChartState extends State<PortfolioChart> {
     
     final pnl = displayCurrentVal - displayStartVal;
     final pnlPercent = displayStartVal > 0 ? (pnl / displayStartVal) * 100 : 0;
-    final isPositive = pnl >= 0;
-    final lineColor = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
+    
+    // If no holdings, show neutral state (0% change)
+    final bool showNeutral = !widget.hasHoldings;
+    final isPositive = showNeutral ? true : pnl >= 0;
+    final lineColor = showNeutral ? AppTheme.textSecondary : (isPositive ? AppTheme.profitGreen : AppTheme.lossRed);
+    final displayPnlPercent = showNeutral ? 0.0 : pnlPercent;
+    final displayPnl = showNeutral ? 0.0 : pnl;
 
     final minValue = _currentValues.reduce((a, b) => a < b ? a : b);
     final maxValue = _currentValues.reduce((a, b) => a > b ? a : b);
@@ -210,13 +217,13 @@ class _PortfolioChartState extends State<PortfolioChart> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isPositive ? Icons.trending_up : Icons.trending_down,
+                      showNeutral ? Icons.remove : (isPositive ? Icons.trending_up : Icons.trending_down),
                       color: lineColor,
                       size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${isPositive ? '+' : ''}${pnlPercent.toStringAsFixed(2)}%',
+                      showNeutral ? '0.00%' : '${isPositive ? '+' : ''}${displayPnlPercent.toStringAsFixed(2)}%',
                       style: TextStyle(
                         color: lineColor,
                         fontSize: 13,
@@ -233,7 +240,9 @@ class _PortfolioChartState extends State<PortfolioChart> {
           
           // P&L amount text
           Text(
-            '${isPositive ? '+' : ''}${_formatCompact(pnl.abs())} ${isPositive ? 'profit' : 'loss'}',
+            showNeutral 
+              ? 'No investments yet'
+              : '${isPositive ? '+' : ''}${_formatCompact(displayPnl.abs())} ${isPositive ? 'profit' : 'loss'}',
             style: TextStyle(
               color: lineColor,
               fontSize: 13,
