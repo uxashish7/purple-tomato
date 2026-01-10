@@ -34,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: const [
           _HomeContent(),
           PortfolioScreen(),
+          AdvisorScreen(),
           TransactionsScreen(),
           WatchlistScreen(),
         ],
@@ -62,6 +63,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: Icon(Icons.pie_chart_outline),
               activeIcon: Icon(Icons.pie_chart),
               label: 'Portfolio',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.psychology_outlined),
+              activeIcon: Icon(Icons.psychology),
+              label: 'AI Advisor',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.receipt_long_outlined),
@@ -184,29 +190,6 @@ class _HomeContent extends ConsumerWidget {
           ],
         ),
         actions: [
-          // AI Assistant button
-          IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            icon: Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Icon(
-                Icons.psychology,
-                color: AppTheme.accentPurple,
-                size: 16,
-              ),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdvisorScreen()),
-              );
-            },
-          ),
           // Refresh button
           IconButton(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -231,7 +214,7 @@ class _HomeContent extends ConsumerWidget {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.textTertiary.withOpacity(0.5),
+                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.lossRed,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -239,7 +222,7 @@ class _HomeContent extends ConsumerWidget {
                 Text(
                   _isMarketOpen() ? 'Open' : 'Closed',
                   style: TextStyle(
-                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.textTertiary,
+                    color: _isMarketOpen() ? AppTheme.profitGreen : AppTheme.lossRed,
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
