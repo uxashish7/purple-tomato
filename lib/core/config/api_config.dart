@@ -36,8 +36,12 @@ class ApiConfig {
   
   // ============ GEMINI CONFIGURATION ============
   
-  /// Your Google AI (Gemini) API Key
-  static const String geminiApiKey = 'AIzaSyAJBl5ZXt7ITeCi_QmCCSklUQDruWYMRpM';
+  /// Your Google AI (Gemini) API Key - loaded from environment variable
+  /// Set via: flutter build web --dart-define=GEMINI_API_KEY=your_key
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
   
   /// Gemini Model to use
   static const String geminiModel = 'gemini-2.5-flash';
@@ -98,9 +102,8 @@ class ApiConfig {
       upstoxApiSecret != 'YOUR_UPSTOX_API_SECRET' &&
       upstoxRedirectUri != 'YOUR_REDIRECT_URI';
   
-  /// Check if Gemini is configured
-  static bool get isGeminiConfigured =>
-      geminiApiKey != 'YOUR_GEMINI_API_KEY';
+  /// Check if Gemini is configured (API key provided via environment)
+  static bool get isGeminiConfigured => geminiApiKey.isNotEmpty;
   
   /// Generate Upstox Authorization URL
   static String getAuthorizationUrl({String? state}) {
