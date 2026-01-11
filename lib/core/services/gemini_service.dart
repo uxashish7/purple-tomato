@@ -282,15 +282,33 @@ This is a virtual trading simulation. Configure your Gemini API key in `api_conf
       return "Based on your current holdings:\n\n$portfolioContext\n\n💡 **Suggestions:**\n• Consider diversifying across different sectors\n• Keep any single stock under 20% of total portfolio\n• Balance between growth and value stocks";
     }
     
-    if (lowerMessage.contains('market') || lowerMessage.contains('trend') || lowerMessage.contains('sentiment')) {
+    // Sector-specific questions
+    if (lowerMessage.contains('it ') || lowerMessage.contains('tech') || lowerMessage.contains('software')) {
+      return "💻 **IT Sector Overview:**\n\n**Top IT Stocks to Research:**\n• **TCS** - Largest IT company, stable\n• **INFOSYS** - Strong in digital services\n• **WIPRO** - Value pick\n• **HCL TECH** - Product + services mix\n\n**Factors to Consider:**\n• Dollar-rupee movement impacts earnings\n• Global IT spending trends\n• Employee attrition rates\n\nIT sector benefits from digital transformation but can be affected by US recession fears. *For educational purposes only.*";
+    }
+    
+    if (lowerMessage.contains('bank') || lowerMessage.contains('finance') || lowerMessage.contains('nifty bank')) {
+      return "🏦 **Banking Sector Overview:**\n\n**Top Banking Stocks:**\n• **HDFC BANK** - Quality large private bank\n• **ICICI BANK** - Strong retail + digital\n• **SBI** - Largest PSU bank\n• **KOTAK BANK** - Premium valuation\n\n**Key Drivers:**\n• RBI interest rate decisions\n• Credit growth trends\n• Asset quality (NPAs)\n\n*For educational purposes only.*";
+    }
+    
+    if (lowerMessage.contains('pharma') || lowerMessage.contains('health')) {
+      return "💊 **Pharma Sector Overview:**\n\n**Top Pharma Stocks:**\n• **SUN PHARMA** - Largest by revenue\n• **CIPLA** - Strong in respiratory\n• **DR REDDY** - US generics focus\n• **DIVI'S LAB** - API manufacturer\n\n**Sector Traits:**\n• Defensive sector (less volatile)\n• USFDA approvals matter\n• Domestic demand stable\n\n*For educational purposes only.*";
+    }
+    
+    if (lowerMessage.contains('auto') || lowerMessage.contains('electric') || lowerMessage.contains('ev')) {
+      return "🚗 **Auto Sector Overview:**\n\n**Top Auto Stocks:**\n• **MARUTI** - Market leader in cars\n• **TATA MOTORS** - EV + JLR\n• **M&M** - SUVs + tractors\n• **BAJAJ AUTO** - Two-wheelers\n\n**Key Themes:**\n• EV transition opportunities\n• Chip shortage impact reducing\n• Commodity costs (steel, rubber)\n\n*For educational purposes only.*";
+    }
+    
+    if (lowerMessage.contains('market') || lowerMessage.contains('trend') || lowerMessage.contains('sentiment') || lowerMessage.contains('nifty')) {
       return "📈 **Market Overview:**\n\nThe market sentiment is cautiously optimistic. Key sectors to watch:\n• IT - Strong global demand\n• Banking - Rate-sensitive, watch RBI moves\n• Pharma - Defensive play\n\nAlways do your research before trading!";
     }
     
-    if (lowerMessage.contains('buy') || lowerMessage.contains('recommend') || lowerMessage.contains('suggest')) {
-      return "💡 **Stock Ideas to Research:**\n\n• **Large-caps:** RELIANCE, TCS, HDFC Bank (stability)\n• **Mid-caps:** Higher growth potential, higher risk\n• **Defensive:** Pharma, FMCG (during uncertain times)\n\nRemember, this is virtual trading for learning! Do your own research before real investments.";
+    if (lowerMessage.contains('buy') || lowerMessage.contains('recommend') || lowerMessage.contains('suggest') || 
+        lowerMessage.contains('invest') || lowerMessage.contains('which stock') || lowerMessage.contains('should i')) {
+      return "💡 **Stock Ideas to Research:**\n\n• **Large-caps:** RELIANCE, TCS, HDFC Bank (stability)\n• **Mid-caps:** Higher growth potential, higher risk\n• **Defensive:** Pharma, FMCG (during uncertain times)\n\n**Sectors to Explore:**\n• IT - Digital transformation plays\n• Banking - Credit growth theme\n• EV/Auto - Future mobility\n\nRemember, this is virtual trading for learning! Do your own research before real investments.";
     }
     
-    if (lowerMessage.contains('tip') || lowerMessage.contains('strateg')) {
+    if (lowerMessage.contains('tip') || lowerMessage.contains('strateg') || lowerMessage.contains('how to')) {
       return "🎯 **Trading Tips:**\n\n• Start with blue-chip stocks\n• Diversify across 5-7 sectors\n• Set stop-losses (typically 5-10%)\n• Don't invest money you can't afford to lose\n• Learn from every trade, win or lose!";
     }
     
