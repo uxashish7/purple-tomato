@@ -5,6 +5,7 @@ import 'core/services/hive_service.dart';
 import 'core/services/supabase_service.dart';
 import 'shared/theme/app_theme.dart';
 import 'features/market/screens/home_screen.dart';
+import 'features/auth/screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +14,7 @@ void main() async {
   await Hive.initFlutter();
   await HiveService.init();
   
-  // Initialize Supabase (cloud database)
+  // Initialize Supabase (cloud database + auth)
   await SupabaseService.initialize();
   
   runApp(
@@ -34,7 +35,10 @@ class VirtualTradingApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      home: const HomeScreen(),
+      // Show AuthScreen if not logged in, else HomeScreen
+      home: SupabaseService.isLoggedIn 
+          ? const HomeScreen() 
+          : const AuthScreen(),
     );
   }
 }

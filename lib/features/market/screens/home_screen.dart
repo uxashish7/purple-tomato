@@ -377,6 +377,8 @@ class _HomeContent extends ConsumerWidget {
                 startValue: wallet.initialBalance,
                 currentValue: totalPortfolioValue,
                 hasHoldings: holdings.isNotEmpty,
+                investedAmount: investedValue,
+                holdingsValue: currentValue,
               ),
               
               const SizedBox(height: 24),

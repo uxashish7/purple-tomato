@@ -10,6 +10,8 @@ class PortfolioChart extends StatefulWidget {
   final double? startValue;
   final double? currentValue;
   final bool hasHoldings;
+  final double investedAmount;
+  final double holdingsValue;
 
   const PortfolioChart({
     super.key,
@@ -18,6 +20,8 @@ class PortfolioChart extends StatefulWidget {
     this.startValue,
     this.currentValue,
     this.hasHoldings = true,
+    this.investedAmount = 0,
+    this.holdingsValue = 0,
   });
 
   @override
@@ -204,15 +208,18 @@ class _PortfolioChartState extends State<PortfolioChart> {
     final displayStartVal = _currentValues.first;
     final displayCurrentVal = _currentValues.last;
     
-    final pnl = displayCurrentVal - displayStartVal;
-    final pnlPercent = displayStartVal > 0 ? (pnl / displayStartVal) * 100 : 0;
+    // Calculate P&L from REAL invested vs current values (not chart points)
+    final realPnl = widget.holdingsValue - widget.investedAmount;
+    final realPnlPercent = widget.investedAmount > 0 
+        ? (realPnl / widget.investedAmount) * 100 
+        : 0.0;
     
     // If no holdings, show neutral state (0% change)
     final bool showNeutral = !widget.hasHoldings;
-    final isPositive = showNeutral ? true : pnl >= 0;
+    final isPositive = showNeutral ? true : realPnl >= 0;
     final lineColor = showNeutral ? AppTheme.textSecondary : (isPositive ? AppTheme.profitGreen : AppTheme.lossRed);
-    final displayPnlPercent = showNeutral ? 0.0 : pnlPercent;
-    final displayPnl = showNeutral ? 0.0 : pnl;
+    final displayPnlPercent = showNeutral ? 0.0 : realPnlPercent;
+    final displayPnl = showNeutral ? 0.0 : realPnl;
 
     final minValue = _currentValues.reduce((a, b) => a < b ? a : b);
     final maxValue = _currentValues.reduce((a, b) => a > b ? a : b);
