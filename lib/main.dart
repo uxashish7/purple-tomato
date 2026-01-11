@@ -35,10 +35,9 @@ class VirtualTradingApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Show AuthScreen if not logged in, else HomeScreen
-      home: SupabaseService.isLoggedIn 
-          ? const HomeScreen() 
-          : const AuthScreen(),
+      // Skip auth screen - go directly to HomeScreen
+      // Auth code is preserved for future use
+      home: const HomeScreen(),
     );
   }
 }
