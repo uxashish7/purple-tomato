@@ -113,11 +113,16 @@ Keep response under 100 words. This is for educational/virtual trading only - no
 
   /// Chat with AI assistant - conversational interface
   Future<String> chat(String userMessage, String portfolioContext) async {
+    print('GeminiService: isConfigured=$isConfigured');
+    
     if (!isConfigured) {
+      print('GeminiService: Not configured, using mock response');
       return _getMockChatResponse(userMessage, portfolioContext);
     }
 
     try {
+      print('GeminiService: Calling Gemini API with model: ${ApiConfig.geminiModel}');
+      
       final prompt = '''
 You are a friendly and helpful AI trading assistant for a virtual trading app. 
 You provide educational insights about stocks, markets, and trading strategies.
@@ -128,11 +133,12 @@ User message: "$userMessage"
 
 Guidelines:
 - Be conversational and helpful
-- Keep responses concise (under 150 words)
+- Keep responses concise (under 200 words)
 - Use emojis sparingly for friendliness
-- If discussing specific stocks, remind this is for educational purposes
+- If discussing specific stocks, provide educational analysis about fundamentals, technicals, or news
 - Consider the user's portfolio when giving advice
 - Never give specific buy/sell prices as financial advice
+- For stock analysis, discuss: company overview, sector, key metrics, recent performance, risks
 
 Respond naturally to the user's message:
 ''';
@@ -140,10 +146,12 @@ Respond naturally to the user's message:
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
       
+      print('GeminiService: Got response from Gemini');
       return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
     } catch (e) {
-      print('Error in chat with Gemini: $e');
-      return _getMockChatResponse(userMessage, portfolioContext);
+      print('GeminiService ERROR: $e');
+      // Return error message instead of mock so user knows there's an issue
+      return '⚠️ AI temporarily unavailable. Error: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}...\n\nPlease try again in a moment.';
     }
   }
 
