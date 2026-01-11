@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_theme.dart';
+import '../../core/services/supabase_service.dart';
 
 /// Portfolio performance chart with time period selector - Modern Indian app style
 class PortfolioChart extends StatefulWidget {
@@ -28,11 +29,14 @@ class _PortfolioChartState extends State<PortfolioChart> {
   final List<String> _periods = ['1D', '1W', '1M', '3M', '1Y', 'All'];
   
   late List<double> _currentValues;
+  bool _isLoading = false;
+  bool _hasRealData = false;
 
   @override
   void initState() {
     super.initState();
     _currentValues = widget.values;
+    _fetchRealData(_selectedPeriod);
   }
 
   @override
@@ -43,8 +47,61 @@ class _PortfolioChartState extends State<PortfolioChart> {
     }
   }
 
-  /// Generate simulated data based on selected period and current/start values
-  void _updateChartData(String period) {
+  /// Fetch real data from Supabase based on selected period
+  Future<void> _fetchRealData(String period) async {
+    if (!SupabaseService.isAvailable) {
+      _updateChartDataWithSimulation(period);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    Duration duration;
+    switch (period) {
+      case '1D':
+        duration = const Duration(hours: 24);
+        break;
+      case '1W':
+        duration = const Duration(days: 7);
+        break;
+      case '1M':
+        duration = const Duration(days: 30);
+        break;
+      case '3M':
+        duration = const Duration(days: 90);
+        break;
+      case '1Y':
+        duration = const Duration(days: 365);
+        break;
+      case 'All':
+      default:
+        duration = const Duration(days: 3650); // ~10 years
+        break;
+    }
+
+    try {
+      final snapshots = await SupabaseService.getSnapshots(period: duration);
+      
+      if (snapshots.isEmpty || snapshots.length < 2) {
+        // Not enough real data, use simulated
+        _hasRealData = false;
+        _updateChartDataWithSimulation(period);
+      } else {
+        // Use real data from Supabase
+        _hasRealData = true;
+        _currentValues = snapshots.map((s) => s.totalValue).toList();
+        _selectedPeriod = period;
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching snapshots: $e');
+      _hasRealData = false;
+      _updateChartDataWithSimulation(period);
+    }
+  }
+
+  /// Generate simulated data (fallback when no real data available)
+  void _updateChartDataWithSimulation(String period) {
     if (widget.currentValue == null || widget.startValue == null) return;
     
     final current = widget.currentValue!;
@@ -338,7 +395,7 @@ class _PortfolioChartState extends State<PortfolioChart> {
                 final isSelected = period == _selectedPeriod;
                 return Expanded(
                   child: GestureDetector(
-                    onTap: () => _updateChartData(period),
+                    onTap: () => _fetchRealData(period),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 8),

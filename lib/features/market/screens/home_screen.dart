@@ -7,6 +7,7 @@ import '../../../core/providers/portfolio_provider.dart';
 import '../../../core/providers/market_data_provider.dart';
 import '../../../core/providers/upstox_auth_provider.dart';
 import '../../../core/services/hive_service.dart';
+import '../../../core/services/supabase_service.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/portfolio_chart.dart';
 import '../../portfolio/screens/portfolio_screen.dart';
@@ -98,12 +99,15 @@ class _HomeContent extends ConsumerWidget {
     return formatter.format(amount);
   }
 
-  /// Check if Indian stock market is open
+  /// Check if Indian stock market is open (uses IST timezone)
   bool _isMarketOpen() {
-    final now = DateTime.now();
-    final hour = now.hour;
-    final minute = now.minute;
-    final weekday = now.weekday;
+    // Force IST timezone (UTC+5:30) regardless of device timezone
+    final utcNow = DateTime.now().toUtc();
+    final istNow = utcNow.add(const Duration(hours: 5, minutes: 30));
+    
+    final hour = istNow.hour;
+    final minute = istNow.minute;
+    final weekday = istNow.weekday;
     
     // Market open on weekdays 9:15 AM - 3:30 PM IST
     if (weekday >= 6) return false; // Weekend (Saturday=6, Sunday=7)
@@ -154,6 +158,14 @@ class _HomeContent extends ConsumerWidget {
     final overallPnLPercent = wallet.initialBalance > 0 
         ? (overallPnL / wallet.initialBalance) * 100 
         : 0.0;
+
+    // Save portfolio snapshot to Supabase (rate-limited to once per hour)
+    SupabaseService.saveSnapshotIfNeeded(
+      totalValue: totalPortfolioValue,
+      cashBalance: wallet.balance,
+      investedAmount: investedValue,
+      holdingsValue: currentValue,
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
