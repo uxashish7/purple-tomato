@@ -1,6 +1,6 @@
 {
-    "buildCommand": "flutter build web --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY",
+    "buildCommand": "git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter-sdk && export PATH=\"$PATH:$PWD/flutter-sdk/bin\" && flutter --version && flutter pub get && flutter build web --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY",
     "outputDirectory": "build/web",
-    "installCommand": "git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PATH:$PWD/flutter/bin\" && flutter pub get",
-    "framework": null
+    "framework": null,
+    "installCommand": "echo 'Skip install - Flutter installed in build step'"
 }
