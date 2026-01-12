@@ -1,11 +1,12 @@
-import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 import '../config/api_config.dart';
 import '../models/holding.dart';
 
-/// Service for interacting with Google Gemini AI
+// Conditional import for dart:io (not available on web)
+import 'gemini_service_io.dart' if (dart.library.html) 'gemini_service_web.dart' as platform;
 class GeminiService {
   GenerativeModel? _model;
   
@@ -205,10 +206,9 @@ Respond naturally to the user's message:
           ])
         ];
       } else if (pdfPath != null) {
-        // Read PDF file and add as context
-        try {
-          final file = File(pdfPath);
-          final pdfBytes = await file.readAsBytes();
+        // Read PDF file and add as context (uses platform-specific helper)
+        final pdfBytes = await platform.readFileBytes(pdfPath);
+        if (pdfBytes != null) {
           print('GeminiService: Sending PDF with prompt');
           content = [
             Content.multi([
@@ -216,8 +216,8 @@ Respond naturally to the user's message:
               DataPart('application/pdf', pdfBytes),
             ])
           ];
-        } catch (e) {
-          print('GeminiService: Error reading PDF: $e');
+        } else {
+          print('GeminiService: Could not read PDF file');
           content = [Content.text('$prompt\n\n[Note: Could not read the attached PDF file]')];
         }
       } else {
