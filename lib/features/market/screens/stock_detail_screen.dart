@@ -127,9 +127,9 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
             
             const SizedBox(height: 24),
             
-            // Price Display
+            // Price Display - Properly Aligned
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   '₹${livePrice.toStringAsFixed(2)}',
@@ -137,32 +137,40 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                     color: priceColor,
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
+                    height: 1.0,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: priceColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isPositive ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                        color: priceColor,
-                        size: 18,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: priceColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: priceColor.withOpacity(0.3),
+                        width: 1,
                       ),
-                      Text(
-                        '${isPositive ? '+' : ''}${change.toStringAsFixed(2)} (${isPositive ? '+' : ''}${changePercent.toStringAsFixed(2)}%)',
-                        style: TextStyle(
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPositive ? Icons.arrow_drop_up : Icons.arrow_drop_down,
                           color: priceColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          size: 18,
                         ),
-                      ),
-                    ],
+                        Text(
+                          '${isPositive ? '+' : ''}${change.toStringAsFixed(2)} (${isPositive ? '+' : ''}${changePercent.toStringAsFixed(2)}%)',
+                          style: TextStyle(
+                            color: priceColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
