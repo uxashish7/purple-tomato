@@ -49,9 +49,9 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
   
-  // Attachment state
+  // Attachment state - store bytes directly (works on all platforms)
   Uint8List? _pendingImage;
-  String? _pendingPdfPath;
+  Uint8List? _pendingPdfBytes;  // Changed from path to bytes
   String? _pendingPdfName;
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -95,11 +95,11 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty && _pendingImage == null && _pendingPdfPath == null) return;
+    if (text.isEmpty && _pendingImage == null && _pendingPdfBytes == null) return;
 
     // Capture pending attachments before clearing
     final imageBytes = _pendingImage;
-    final pdfPath = _pendingPdfPath;
+    final pdfBytes = _pendingPdfBytes;
     final pdfName = _pendingPdfName;
 
     // Detect URL in message
@@ -125,7 +125,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
       ));
       _isTyping = true;
       _pendingImage = null;
-      _pendingPdfPath = null;
+      _pendingPdfBytes = null;
       _pendingPdfName = null;
     });
     _messageController.clear();
@@ -150,7 +150,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         text.isEmpty ? 'Analyze this' : text,
         context,
         imageBytes: imageBytes,
-        pdfPath: pdfPath,
+        pdfBytes: pdfBytes,  // Changed from pdfPath to pdfBytes
       );
       
       setState(() {
@@ -229,7 +229,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         }
         
         setState(() {
-          _pendingPdfPath = file.path;
+          _pendingPdfBytes = file.bytes;  // Use bytes directly
           _pendingPdfName = file.name;
           _pendingImage = null;
         });
@@ -256,7 +256,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
   void _clearAttachment() {
     setState(() {
       _pendingImage = null;
-      _pendingPdfPath = null;
+      _pendingPdfBytes = null;
       _pendingPdfName = null;
     });
   }

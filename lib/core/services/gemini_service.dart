@@ -1,12 +1,10 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 import '../config/api_config.dart';
 import '../models/holding.dart';
 
-// Conditional import for dart:io (not available on web)
-import 'gemini_service_io.dart' if (dart.library.html) 'gemini_service_web.dart' as platform;
+/// Service for interacting with Google Gemini AI
 class GeminiService {
   GenerativeModel? _model;
   
@@ -163,10 +161,10 @@ Respond naturally to the user's message:
     String userMessage,
     String portfolioContext, {
     Uint8List? imageBytes,
-    String? pdfPath,
+    Uint8List? pdfBytes,  // Changed from pdfPath to pdfBytes
   }) async {
     print('GeminiService: chatWithAttachments called');
-    print('  - hasImage: ${imageBytes != null}, hasPdf: ${pdfPath != null}');
+    print('  - hasImage: ${imageBytes != null}, hasPdf: ${pdfBytes != null}');
     
     if (!isConfigured) {
       print('GeminiService: Not configured, using mock response');
@@ -205,21 +203,15 @@ Respond naturally to the user's message:
             DataPart('image/jpeg', imageBytes),
           ])
         ];
-      } else if (pdfPath != null) {
-        // Read PDF file and add as context (uses platform-specific helper)
-        final pdfBytes = await platform.readFileBytes(pdfPath);
-        if (pdfBytes != null) {
-          print('GeminiService: Sending PDF with prompt');
-          content = [
-            Content.multi([
-              TextPart(prompt),
-              DataPart('application/pdf', pdfBytes),
-            ])
-          ];
-        } else {
-          print('GeminiService: Could not read PDF file');
-          content = [Content.text('$prompt\n\n[Note: Could not read the attached PDF file]')];
-        }
+      } else if (pdfBytes != null) {
+        // Send PDF bytes directly (no file operations needed)
+        print('GeminiService: Sending PDF with prompt');
+        content = [
+          Content.multi([
+            TextPart(prompt),
+            DataPart('application/pdf', pdfBytes),
+          ])
+        ];
       } else {
         content = [Content.text(prompt)];
       }
