@@ -56,9 +56,7 @@ dependencies:
   # Authentication
   google_sign_in: ^6.2.1
   
-  # Candlestick Charts (TradingView style)
-  candlesticks: ^2.1.0
-  
+  # Charts (fl_chart used for line and candlestick)
   # Media Picker
   image_picker: ^1.0.4
   file_picker: ^8.0.0  # Upgraded for Flutter v2 embedding support

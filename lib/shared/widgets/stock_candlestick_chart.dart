@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:candlesticks/candlesticks.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_theme.dart';
 import '../../core/services/yahoo_finance_service.dart';
 
-/// TradingView-style Candlestick Chart Widget
+/// TradingView-style Chart Widget using fl_chart
+/// Supports both Line and Candlestick views with proper X-axis scaling
 class StockCandlestickChart extends StatefulWidget {
   final String symbol;
   final double currentPrice;
@@ -20,10 +21,11 @@ class StockCandlestickChart extends StatefulWidget {
 
 class _StockCandlestickChartState extends State<StockCandlestickChart> {
   final YahooFinanceService _yahooService = YahooFinanceService();
-  List<Candle> _candles = [];
+  List<OHLCData> _ohlcData = [];
   bool _isLoading = true;
   bool _showCandlestick = true; // Toggle between line and candlestick
   String _selectedPeriod = '1M';
+  String? _error;
   
   final List<Map<String, String>> _periods = [
     {'label': '1D', 'range': '1d', 'interval': '5m'},
@@ -41,36 +43,39 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
   }
 
   Future<void> _loadOHLCData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     
     final periodConfig = _periods.firstWhere(
       (p) => p['label'] == _selectedPeriod,
       orElse: () => _periods[2],
     );
     
-    final ohlcData = await _yahooService.getHistoricalOHLC(
-      widget.symbol,
-      period: periodConfig['range']!,
-      interval: periodConfig['interval']!,
-    );
-    
-    // Convert to Candle format for the candlesticks package
-    final candles = ohlcData.map((data) => Candle(
-      date: data.date,
-      open: data.open,
-      high: data.high,
-      low: data.low,
-      close: data.close,
-      volume: data.volume,
-    )).toList();
-    
-    // Candlesticks package expects newest first
-    candles.sort((a, b) => b.date.compareTo(a.date));
-    
-    setState(() {
-      _candles = candles;
-      _isLoading = false;
-    });
+    try {
+      final ohlcData = await _yahooService.getHistoricalOHLC(
+        widget.symbol,
+        period: periodConfig['range']!,
+        interval: periodConfig['interval']!,
+      );
+      
+      // Sort by date ascending for proper chart display
+      ohlcData.sort((a, b) => a.date.compareTo(b.date));
+      
+      setState(() {
+        _ohlcData = ohlcData;
+        _isLoading = false;
+      });
+      
+      print('Chart: Loaded ${ohlcData.length} candles for ${widget.symbol}');
+    } catch (e) {
+      print('Chart error: $e');
+      setState(() {
+        _error = 'Failed to load chart data';
+        _isLoading = false;
+      });
+    }
   }
 
   void _onPeriodChanged(String period) {
@@ -161,21 +166,26 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
                       strokeWidth: 2,
                     ),
                   )
-                : _candles.isEmpty
+                : _error != null
                     ? Center(
                         child: Text(
-                          'No chart data available',
+                          _error!,
                           style: TextStyle(color: AppTheme.textMuted),
                         ),
                       )
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Candlesticks(
-                          candles: _candles,
-                          onLoadMoreCandles: () async {},
-                          actions: [],
-                        ),
-                      ),
+                    : _ohlcData.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No chart data available',
+                              style: TextStyle(color: AppTheme.textMuted),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: _showCandlestick 
+                                ? _buildCandlestickChart()
+                                : _buildLineChart(),
+                          ),
           ),
           
           // Time Period Selector
@@ -230,6 +240,252 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
         ],
       ),
     );
+  }
+
+  /// Build Line Chart using fl_chart
+  Widget _buildLineChart() {
+    if (_ohlcData.isEmpty) return const SizedBox();
+    
+    final spots = <FlSpot>[];
+    for (int i = 0; i < _ohlcData.length; i++) {
+      spots.add(FlSpot(i.toDouble(), _ohlcData[i].close));
+    }
+    
+    final minY = _ohlcData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
+    final maxY = _ohlcData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
+    
+    // Determine if overall trend is up or down
+    final isUp = _ohlcData.last.close >= _ohlcData.first.open;
+    final chartColor = isUp ? AppTheme.profitGreen : AppTheme.lossRed;
+    
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: (maxY - minY) / 4,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.white.withOpacity(0.05),
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 50,
+              getTitlesWidget: (value, meta) {
+                if (value == meta.min || value == meta.max) return const SizedBox();
+                return Text(
+                  '₹${value.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval: (_ohlcData.length / 4).ceilToDouble(),
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= _ohlcData.length) return const SizedBox();
+                final date = _ohlcData[index].date;
+                return Text(
+                  '${date.day}/${date.month}',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 9,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        minY: minY,
+        maxY: maxY,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.2,
+            color: chartColor,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  chartColor.withOpacity(0.3),
+                  chartColor.withOpacity(0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => AppTheme.cardDark,
+            tooltipRoundedRadius: 8,
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((spot) {
+                final index = spot.spotIndex;
+                if (index < 0 || index >= _ohlcData.length) return null;
+                final data = _ohlcData[index];
+                return LineTooltipItem(
+                  '₹${data.close.toStringAsFixed(2)}\n${data.date.day}/${data.date.month}',
+                  TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build Candlestick Chart using fl_chart BarChart
+  Widget _buildCandlestickChart() {
+    if (_ohlcData.isEmpty) return const SizedBox();
+    
+    final minY = _ohlcData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
+    final maxY = _ohlcData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
+    
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: maxY,
+        minY: minY,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => AppTheme.cardDark,
+            tooltipRoundedRadius: 8,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              if (groupIndex < 0 || groupIndex >= _ohlcData.length) return null;
+              final data = _ohlcData[groupIndex];
+              return BarTooltipItem(
+                'O: ₹${data.open.toStringAsFixed(2)}\n'
+                'H: ₹${data.high.toStringAsFixed(2)}\n'
+                'L: ₹${data.low.toStringAsFixed(2)}\n'
+                'C: ₹${data.close.toStringAsFixed(2)}',
+                TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 50,
+              getTitlesWidget: (value, meta) {
+                if (value == meta.min || value == meta.max) return const SizedBox();
+                return Text(
+                  '₹${value.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                // Show fewer labels to avoid crowding
+                if (index < 0 || index >= _ohlcData.length) return const SizedBox();
+                if (index % ((_ohlcData.length / 4).ceil()) != 0) return const SizedBox();
+                final date = _ohlcData[index].date;
+                return Text(
+                  '${date.day}/${date.month}',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 9,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: (maxY - minY) / 4,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.white.withOpacity(0.05),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        barGroups: _buildCandlestickBars(minY, maxY),
+      ),
+    );
+  }
+
+  List<BarChartGroupData> _buildCandlestickBars(double minY, double maxY) {
+    final List<BarChartGroupData> bars = [];
+    
+    for (int i = 0; i < _ohlcData.length; i++) {
+      final data = _ohlcData[i];
+      final isUp = data.close >= data.open;
+      final color = isUp ? AppTheme.profitGreen : AppTheme.lossRed;
+      
+      // Candlestick is drawn as a bar from low to high with body from open to close
+      final bodyTop = isUp ? data.close : data.open;
+      final bodyBottom = isUp ? data.open : data.close;
+      
+      bars.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            // Wick (thin line from low to high)
+            BarChartRodData(
+              toY: data.high,
+              fromY: data.low,
+              color: color.withOpacity(0.6),
+              width: 1,
+              borderRadius: BorderRadius.zero,
+            ),
+            // Body (thick bar from open to close)
+            BarChartRodData(
+              toY: bodyTop,
+              fromY: bodyBottom,
+              color: color,
+              width: _ohlcData.length > 50 ? 3 : (_ohlcData.length > 20 ? 5 : 8),
+              borderRadius: BorderRadius.zero,
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return bars;
   }
 }
 
