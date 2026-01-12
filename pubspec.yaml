@@ -61,7 +61,7 @@ dependencies:
   
   # Media Picker
   image_picker: ^1.0.4
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0  # Upgraded for Flutter v2 embedding support
   
   # HTTP for URL content fetching
   http: ^1.2.0
