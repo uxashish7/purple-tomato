@@ -183,7 +183,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         final bytes = await image.readAsBytes();
         setState(() {
           _pendingImage = bytes;
-          _pendingPdfPath = null;
+          _pendingPdfBytes = null;  // Fixed: was _pendingPdfPath
           _pendingPdfName = null;
         });
         
