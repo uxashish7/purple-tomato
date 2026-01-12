@@ -346,20 +346,41 @@ class _PortfolioChartState extends State<PortfolioChart> {
                         .map((e) => FlSpot(e.key.toDouble(), e.value))
                         .toList(),
                     isCurved: true,
-                    curveSmoothness: 0.3,
+                    curveSmoothness: 0.35,
                     color: lineColor,
-                    barWidth: 3,
+                    barWidth: 3.5,
                     isStrokeCapRound: true,
-                    dotData: FlDotData(show: false),
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        // Only show dot on last point (current value)
+                        if (index == _currentValues.length - 1) {
+                          return FlDotCirclePainter(
+                            radius: 6,
+                            color: lineColor,
+                            strokeWidth: 3,
+                            strokeColor: AppTheme.backgroundDark,
+                          );
+                        }
+                        return FlDotCirclePainter(
+                          radius: 0,
+                          color: Colors.transparent,
+                          strokeWidth: 0,
+                          strokeColor: Colors.transparent,
+                        );
+                      },
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          lineColor.withOpacity(0.2),
+                          lineColor.withOpacity(0.35),
+                          lineColor.withOpacity(0.15),
                           lineColor.withOpacity(0.0),
                         ],
+                        stops: const [0.0, 0.5, 1.0],
                       ),
                     ),
                   ),

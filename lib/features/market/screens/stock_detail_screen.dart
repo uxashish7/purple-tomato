@@ -188,36 +188,121 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
               ),
             ),
             
-            // Current Holding
+            // Current Holding - Glassmorphism Design
             if (holding != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.accentBlue.withOpacity(0.3),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.accentPurple.withOpacity(0.15),
+                      AppTheme.accentBlue.withOpacity(0.08),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.accentPurple.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentPurple.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Your Holding',
-                      style: TextStyle(
-                        color: AppTheme.accentBlue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _HoldingInfo(label: 'Quantity', value: '${holding.quantity}'),
-                        _HoldingInfo(label: 'Avg. Price', value: '₹${holding.avgBuyPrice.toStringAsFixed(2)}'),
-                        _HoldingInfo(label: 'Invested', value: '₹${holding.investedValue.toStringAsFixed(0)}'),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentPurple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.account_balance_wallet,
+                                color: AppTheme.accentPurple,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Your Holding',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Current Value with P&L
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '₹${(holding.quantity * livePrice).toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Builder(
+                              builder: (context) {
+                                final currentVal = holding.quantity * livePrice;
+                                final pnl = currentVal - holding.investedValue;
+                                final pnlPercent = (pnl / holding.investedValue) * 100;
+                                final isProfit = pnl >= 0;
+                                return Text(
+                                  '${isProfit ? '+' : ''}₹${pnl.toStringAsFixed(0)} (${isProfit ? '+' : ''}${pnlPercent.toStringAsFixed(1)}%)',
+                                  style: TextStyle(
+                                    color: isProfit ? AppTheme.profitGreen : AppTheme.lossRed,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _HoldingInfoModern(label: 'Qty', value: '${holding.quantity}'),
+                          Container(
+                            width: 1,
+                            height: 30,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                          _HoldingInfoModern(label: 'Avg', value: '₹${holding.avgBuyPrice.toStringAsFixed(0)}'),
+                          Container(
+                            width: 1,
+                            height: 30,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                          _HoldingInfoModern(label: 'Invested', value: '₹${holding.investedValue.toStringAsFixed(0)}'),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -672,6 +757,38 @@ class _HoldingInfo extends StatelessWidget {
           style: const TextStyle(
             color: AppTheme.textPrimary,
             fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HoldingInfoModern extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _HoldingInfoModern({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: AppTheme.textMuted,
+            fontSize: 11,
           ),
         ),
       ],
