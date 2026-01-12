@@ -224,4 +224,111 @@ class YahooFinanceService {
       ),
     ];
   }
+
+  /// Get historical OHLC data for candlestick charts
+  Future<List<OHLCData>> getHistoricalOHLC(String symbol, {String period = '1mo', String interval = '1d'}) async {
+    try {
+      // Convert to Yahoo Finance format if needed
+      String yahooSymbol = symbol;
+      if (!symbol.contains('.NS') && !symbol.contains('.BO') && !symbol.startsWith('^')) {
+        yahooSymbol = '$symbol.NS'; // Default to NSE
+      }
+      
+      final url = _getUrl(_yahooBaseUrl, '/chart/$yahooSymbol', {
+        'interval': interval,
+        'range': period,
+      });
+      
+      final response = await _dio.get(url);
+      final data = response.data;
+      
+      if (data == null) return _getMockOHLC();
+      
+      final result = data['chart']?['result'];
+      if (result == null || (result as List).isEmpty) return _getMockOHLC();
+      
+      final timestamps = result[0]['timestamp'] as List?;
+      final indicators = result[0]['indicators']?['quote']?[0];
+      
+      if (timestamps == null || indicators == null) return _getMockOHLC();
+      
+      final opens = indicators['open'] as List?;
+      final highs = indicators['high'] as List?;
+      final lows = indicators['low'] as List?;
+      final closes = indicators['close'] as List?;
+      final volumes = indicators['volume'] as List?;
+      
+      if (opens == null || highs == null || lows == null || closes == null) {
+        return _getMockOHLC();
+      }
+      
+      final List<OHLCData> ohlcList = [];
+      
+      for (int i = 0; i < timestamps.length; i++) {
+        if (opens[i] != null && highs[i] != null && lows[i] != null && closes[i] != null) {
+          ohlcList.add(OHLCData(
+            date: DateTime.fromMillisecondsSinceEpoch((timestamps[i] as int) * 1000),
+            open: (opens[i] as num).toDouble(),
+            high: (highs[i] as num).toDouble(),
+            low: (lows[i] as num).toDouble(),
+            close: (closes[i] as num).toDouble(),
+            volume: volumes != null && volumes[i] != null ? (volumes[i] as num).toDouble() : 0,
+          ));
+        }
+      }
+      
+      return ohlcList.isNotEmpty ? ohlcList : _getMockOHLC();
+    } catch (e) {
+      print('Yahoo Finance OHLC error: $e');
+      return _getMockOHLC();
+    }
+  }
+  
+  /// Generate mock OHLC data for fallback
+  List<OHLCData> _getMockOHLC() {
+    final List<OHLCData> mockData = [];
+    final now = DateTime.now();
+    double basePrice = 1500.0;
+    
+    for (int i = 30; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final open = basePrice + (i % 3 - 1) * 10;
+      final change = (i * 7 % 40) - 20;
+      final high = open + (change.abs() + 15);
+      final low = open - (change.abs() + 10);
+      final close = open + change;
+      
+      mockData.add(OHLCData(
+        date: date,
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        volume: 1000000 + (i * 50000),
+      ));
+      
+      basePrice = close;
+    }
+    
+    return mockData;
+  }
+}
+
+/// OHLC Data model for candlestick charts
+class OHLCData {
+  final DateTime date;
+  final double open;
+  final double high;
+  final double low;
+  final double close;
+  final double volume;
+  
+  OHLCData({
+    required this.date,
+    required this.open,
+    required this.high,
+    required this.low,
+    required this.close,
+    this.volume = 0,
+  });
 }

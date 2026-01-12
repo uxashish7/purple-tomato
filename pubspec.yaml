@@ -55,6 +55,16 @@ dependencies:
   
   # Authentication
   google_sign_in: ^6.2.1
+  
+  # Candlestick Charts (TradingView style)
+  candlesticks: ^2.1.0
+  
+  # Media Picker
+  image_picker: ^1.0.4
+  file_picker: ^6.1.1
+  
+  # HTTP for URL content fetching
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:

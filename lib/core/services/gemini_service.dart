@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 import '../config/api_config.dart';
@@ -151,6 +153,83 @@ Respond naturally to the user's message:
     } catch (e) {
       print('GeminiService ERROR: $e');
       // Return error message instead of mock so user knows there's an issue
+      return '⚠️ AI temporarily unavailable. Error: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}...\n\nPlease try again in a moment.';
+    }
+  }
+
+  /// Chat with AI assistant - with image/PDF attachment support
+  Future<String> chatWithAttachments(
+    String userMessage,
+    String portfolioContext, {
+    Uint8List? imageBytes,
+    String? pdfPath,
+  }) async {
+    print('GeminiService: chatWithAttachments called');
+    print('  - hasImage: ${imageBytes != null}, hasPdf: ${pdfPath != null}');
+    
+    if (!isConfigured) {
+      print('GeminiService: Not configured, using mock response');
+      return _getMockChatResponse(userMessage, portfolioContext);
+    }
+
+    try {
+      final prompt = '''
+You are a friendly and helpful AI trading assistant for a virtual trading app.
+You provide educational insights about stocks, markets, and trading strategies.
+
+$portfolioContext
+
+User message: "$userMessage"
+
+Guidelines:
+- Be conversational and helpful
+- Keep responses concise (under 200 words)
+- Use emojis sparingly for friendliness
+- If an image is attached, analyze it (e.g., stock chart patterns, trends)
+- If a PDF is attached, summarize key financial data or insights
+- Consider the user's portfolio when giving advice
+- Never give specific buy/sell prices as financial advice
+
+Respond naturally to the user's message:
+''';
+
+      List<Content> content = [];
+      
+      if (imageBytes != null) {
+        // Add image for analysis
+        print('GeminiService: Sending image with prompt');
+        content = [
+          Content.multi([
+            TextPart(prompt),
+            DataPart('image/jpeg', imageBytes),
+          ])
+        ];
+      } else if (pdfPath != null) {
+        // Read PDF file and add as context
+        try {
+          final file = File(pdfPath);
+          final pdfBytes = await file.readAsBytes();
+          print('GeminiService: Sending PDF with prompt');
+          content = [
+            Content.multi([
+              TextPart(prompt),
+              DataPart('application/pdf', pdfBytes),
+            ])
+          ];
+        } catch (e) {
+          print('GeminiService: Error reading PDF: $e');
+          content = [Content.text('$prompt\n\n[Note: Could not read the attached PDF file]')];
+        }
+      } else {
+        content = [Content.text(prompt)];
+      }
+      
+      final response = await _model!.generateContent(content);
+      
+      print('GeminiService: Got response from Gemini');
+      return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
+    } catch (e) {
+      print('GeminiService ERROR: $e');
       return '⚠️ AI temporarily unavailable. Error: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}...\n\nPlease try again in a moment.';
     }
   }

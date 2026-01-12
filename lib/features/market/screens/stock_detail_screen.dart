@@ -6,6 +6,7 @@ import '../../../core/providers/watchlist_provider.dart';
 import '../../../core/providers/portfolio_provider.dart';
 import '../../../core/providers/wallet_provider.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/stock_candlestick_chart.dart';
 
 class StockDetailScreen extends ConsumerStatefulWidget {
   final Stock stock;
@@ -176,7 +177,15 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
               ],
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            
+            // Candlestick Chart
+            StockCandlestickChart(
+              symbol: widget.stock.symbol,
+              currentPrice: livePrice,
+            ),
+            
+            const SizedBox(height: 16),
             
             // OHLC Stats Row
             Container(
