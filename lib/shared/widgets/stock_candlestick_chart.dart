@@ -336,7 +336,7 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
         lineTouchData: LineTouchData(
           enabled: true,
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => AppTheme.cardDark,
+            tooltipBgColor: AppTheme.cardDark,
             tooltipRoundedRadius: 8,
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
@@ -374,7 +374,7 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => AppTheme.cardDark,
+            tooltipBgColor: AppTheme.cardDark,
             tooltipRoundedRadius: 8,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               if (groupIndex < 0 || groupIndex >= _ohlcData.length) return null;
