@@ -154,64 +154,70 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
                     ),
                   ],
                 ),
-                // Line / Candlestick Toggle
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundDark,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ToggleButton(
-                        icon: Icons.show_chart,
-                        isSelected: !_showCandlestick,
-                        onTap: () => setState(() => _showCandlestick = false),
+                // Right side: Toggle + Zoom controls together
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Line / Candlestick Toggle
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundDark,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
                       ),
-                      _ToggleButton(
-                        icon: Icons.candlestick_chart,
-                        isSelected: _showCandlestick,
-                        onTap: () => setState(() => _showCandlestick = true),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Zoom controls
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardDark,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ZoomButton(
-                        icon: Icons.remove,
-                        onTap: _zoomLevel > 1.0
-                            ? () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 4.0))
-                            : null,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(
-                          '${_zoomLevel.toStringAsFixed(1)}x',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 10,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ToggleButton(
+                            icon: Icons.show_chart,
+                            isSelected: !_showCandlestick,
+                            onTap: () => setState(() => _showCandlestick = false),
                           ),
-                        ),
+                          _ToggleButton(
+                            icon: Icons.candlestick_chart,
+                            isSelected: _showCandlestick,
+                            onTap: () => setState(() => _showCandlestick = true),
+                          ),
+                        ],
                       ),
-                      _ZoomButton(
-                        icon: Icons.add,
-                        onTap: _zoomLevel < 4.0
-                            ? () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 4.0))
-                            : null,
+                    ),
+                    const SizedBox(width: 8),
+                    // Zoom controls
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardDark,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ZoomButton(
+                            icon: Icons.remove,
+                            onTap: _zoomLevel > 1.0
+                                ? () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 4.0))
+                                : null,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(
+                              '${_zoomLevel.toStringAsFixed(1)}x',
+                              style: TextStyle(
+                                color: AppTheme.textMuted,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                          _ZoomButton(
+                            icon: Icons.add,
+                            onTap: _zoomLevel < 4.0
+                                ? () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 4.0))
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
