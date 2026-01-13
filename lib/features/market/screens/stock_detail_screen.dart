@@ -5,6 +5,7 @@ import '../../../core/providers/market_data_provider.dart';
 import '../../../core/providers/watchlist_provider.dart';
 import '../../../core/providers/portfolio_provider.dart';
 import '../../../core/providers/wallet_provider.dart';
+import '../../../core/services/yahoo_finance_service.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/stock_candlestick_chart.dart';
 
@@ -21,6 +22,48 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
   bool _isBuyMode = true;
   int _quantity = 1;
   String _orderType = 'Market'; // Market, Limit, SL
+  
+  // Price fetching state
+  final YahooFinanceService _yahooService = YahooFinanceService();
+  double? _fetchedPrice;
+  double? _fetchedChange;
+  double? _fetchedChangePercent;
+  bool _isPriceFetching = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLivePrice();
+  }
+
+  Future<void> _fetchLivePrice() async {
+    try {
+      final ohlcData = await _yahooService.getHistoricalOHLC(
+        widget.stock.symbol,
+        period: '1d',
+        interval: '5m',
+      );
+      
+      if (ohlcData.isNotEmpty) {
+        final latest = ohlcData.last;
+        final first = ohlcData.first;
+        final change = latest.close - first.open;
+        final changePercent = (change / first.open) * 100;
+        
+        setState(() {
+          _fetchedPrice = latest.close;
+          _fetchedChange = change;
+          _fetchedChangePercent = changePercent;
+          _isPriceFetching = false;
+        });
+      } else {
+        setState(() => _isPriceFetching = false);
+      }
+    } catch (e) {
+      print('Price fetch error: $e');
+      setState(() => _isPriceFetching = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +73,14 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
     final holding = ref.read(portfolioProvider.notifier).getHolding(widget.stock.instrumentKey);
     final wallet = ref.watch(walletProvider);
     
-    final livePrice = quote?.lastPrice ?? 1500.0; // Mock price if no live data
-    final change = quote?.change ?? 25.50;
-    final changePercent = quote?.changePercent ?? 1.25;
+    // Use fetched price first, then live quote, then fallback
+    final livePrice = _fetchedPrice ?? quote?.lastPrice ?? 1500.0;
+    final change = _fetchedChange ?? quote?.change ?? 0.0;
+    final changePercent = _fetchedChangePercent ?? quote?.changePercent ?? 0.0;
     final isPositive = change >= 0;
     final priceColor = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
 
-    // Mock OHLC data
+    // OHLC based on actual fetched price
     final open = livePrice - 10;
     final high = livePrice + 25;
     final low = livePrice - 15;

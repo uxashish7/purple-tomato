@@ -27,6 +27,9 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
   String _selectedPeriod = '1M';
   String? _error;
   
+  // Zoom state
+  double _zoomLevel = 1.0;  // 1.0 = full view, 4.0 = max zoom
+  
   final List<Map<String, String>> _periods = [
     {'label': '1D', 'range': '1d', 'interval': '5m'},
     {'label': '1W', 'range': '5d', 'interval': '15m'},
@@ -75,6 +78,29 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
         _error = 'Failed to load chart data';
         _isLoading = false;
       });
+    }
+  }
+
+  /// Smart date formatting based on selected period
+  String _formatDate(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    switch (_selectedPeriod) {
+      case '1D':
+        // Show time for intraday: 2:30 PM
+        final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+        final amPm = date.hour >= 12 ? 'PM' : 'AM';
+        return '$hour:${date.minute.toString().padLeft(2, '0')} $amPm';
+      case '1W':
+        // Show day name: Mon 6
+        return '${days[date.weekday - 1]} ${date.day}';
+      case '1M':
+        // Show month and day: Jan 15
+        return '${months[date.month - 1]} ${date.day}';
+      default:
+        // 3M, 1Y, All: Show year and month: 2026 Jan
+        return '${date.year} ${months[date.month - 1]}';
     }
   }
 
@@ -148,6 +174,41 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
                         icon: Icons.candlestick_chart,
                         isSelected: _showCandlestick,
                         onTap: () => setState(() => _showCandlestick = true),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Zoom controls
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardDark,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ZoomButton(
+                        icon: Icons.remove,
+                        onTap: _zoomLevel > 1.0
+                            ? () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 4.0))
+                            : null,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          '${_zoomLevel.toStringAsFixed(1)}x',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                      _ZoomButton(
+                        icon: Icons.add,
+                        onTap: _zoomLevel < 4.0
+                            ? () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 4.0))
+                            : null,
                       ),
                     ],
                   ),
@@ -246,16 +307,21 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
   Widget _buildLineChart() {
     if (_ohlcData.isEmpty) return const SizedBox();
     
+    // Get visible data based on zoom level (zoom shows last N items)
+    final visibleCount = (_ohlcData.length / _zoomLevel).round().clamp(5, _ohlcData.length);
+    final startIndex = _ohlcData.length - visibleCount;
+    final visibleData = _ohlcData.sublist(startIndex);
+    
     final spots = <FlSpot>[];
-    for (int i = 0; i < _ohlcData.length; i++) {
-      spots.add(FlSpot(i.toDouble(), _ohlcData[i].close));
+    for (int i = 0; i < visibleData.length; i++) {
+      spots.add(FlSpot(i.toDouble(), visibleData[i].close));
     }
     
-    final minY = _ohlcData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
-    final maxY = _ohlcData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
+    final minY = visibleData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
+    final maxY = visibleData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
     
     // Determine if overall trend is up or down
-    final isUp = _ohlcData.last.close >= _ohlcData.first.open;
+    final isUp = visibleData.last.close >= visibleData.first.open;
     final chartColor = isUp ? AppTheme.profitGreen : AppTheme.lossRed;
     
     return LineChart(
@@ -298,7 +364,7 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
                 if (index < 0 || index >= _ohlcData.length) return const SizedBox();
                 final date = _ohlcData[index].date;
                 return Text(
-                  '${date.day}/${date.month}',
+                  _formatDate(date),
                   style: TextStyle(
                     color: AppTheme.textMuted,
                     fontSize: 9,
@@ -363,8 +429,13 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
   Widget _buildCandlestickChart() {
     if (_ohlcData.isEmpty) return const SizedBox();
     
-    final minY = _ohlcData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
-    final maxY = _ohlcData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
+    // Get visible data based on zoom level (zoom shows last N items)
+    final visibleCount = (_ohlcData.length / _zoomLevel).round().clamp(5, _ohlcData.length);
+    final startIndex = _ohlcData.length - visibleCount;
+    final visibleData = _ohlcData.sublist(startIndex);
+    
+    final minY = visibleData.map((d) => d.low).reduce((a, b) => a < b ? a : b) * 0.995;
+    final maxY = visibleData.map((d) => d.high).reduce((a, b) => a > b ? a : b) * 1.005;
     
     return BarChart(
       BarChartData(
@@ -423,7 +494,7 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
                 if (index % ((_ohlcData.length / 4).ceil()) != 0) return const SizedBox();
                 final date = _ohlcData[index].date;
                 return Text(
-                  '${date.day}/${date.month}',
+                  _formatDate(date),
                   style: TextStyle(
                     color: AppTheme.textMuted,
                     fontSize: 9,
@@ -443,22 +514,22 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        barGroups: _buildCandlestickBars(minY, maxY),
+        barGroups: _buildCandlestickBars(visibleData, minY, maxY),
       ),
     );
   }
 
-  List<BarChartGroupData> _buildCandlestickBars(double minY, double maxY) {
+  List<BarChartGroupData> _buildCandlestickBars(List<OHLCData> data, double minY, double maxY) {
     final List<BarChartGroupData> bars = [];
     
-    for (int i = 0; i < _ohlcData.length; i++) {
-      final data = _ohlcData[i];
-      final isUp = data.close >= data.open;
+    for (int i = 0; i < data.length; i++) {
+      final candle = data[i];
+      final isUp = candle.close >= candle.open;
       final color = isUp ? AppTheme.profitGreen : AppTheme.lossRed;
       
       // Candlestick is drawn as a bar from low to high with body from open to close
-      final bodyTop = isUp ? data.close : data.open;
-      final bodyBottom = isUp ? data.open : data.close;
+      final bodyTop = isUp ? candle.close : candle.open;
+      final bodyBottom = isUp ? candle.open : candle.close;
       
       bars.add(
         BarChartGroupData(
@@ -466,8 +537,8 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
           barRods: [
             // Wick (thin line from low to high)
             BarChartRodData(
-              toY: data.high,
-              fromY: data.low,
+              toY: candle.high,
+              fromY: candle.low,
               color: color.withOpacity(0.6),
               width: 1,
               borderRadius: BorderRadius.zero,
@@ -477,7 +548,7 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
               toY: bodyTop,
               fromY: bodyBottom,
               color: color,
-              width: _ohlcData.length > 50 ? 3 : (_ohlcData.length > 20 ? 5 : 8),
+              width: data.length > 50 ? 3 : (data.length > 20 ? 5 : 8),
               borderRadius: BorderRadius.zero,
             ),
           ],
@@ -514,6 +585,33 @@ class _ToggleButton extends StatelessWidget {
           icon,
           size: 18,
           color: isSelected ? AppTheme.accentPurple : AppTheme.textMuted,
+        ),
+      ),
+    );
+  }
+}
+
+/// Zoom button widget for +/- controls
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _ZoomButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = onTap != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        child: Icon(
+          icon,
+          size: 16,
+          color: isEnabled ? AppTheme.textPrimary : AppTheme.textMuted.withOpacity(0.3),
         ),
       ),
     );

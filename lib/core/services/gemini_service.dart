@@ -140,6 +140,7 @@ Guidelines:
 - Consider the user's portfolio when giving advice
 - Never give specific buy/sell prices as financial advice
 - For stock analysis, discuss: company overview, sector, key metrics, recent performance, risks
+- Do NOT use Markdown formatting (no **, *, #, or bullet symbols). Write in plain text only.
 
 Respond naturally to the user's message:
 ''';
@@ -188,6 +189,7 @@ Guidelines:
 - If a PDF is attached, summarize key financial data or insights
 - Consider the user's portfolio when giving advice
 - Never give specific buy/sell prices as financial advice
+- Do NOT use Markdown formatting (no **, *, #, or bullet symbols). Write in plain text only.
 
 Respond naturally to the user's message:
 ''';
