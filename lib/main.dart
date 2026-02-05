@@ -8,6 +8,7 @@ import 'shared/theme/app_theme.dart';
 import 'features/market/screens/home_screen.dart';
 import 'features/auth/screens/auth_screen.dart';
 import 'features/auth/screens/callback_screen.dart';
+import 'core/providers/upstox_auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,19 +27,19 @@ void main() async {
   );
 }
 
-class VirtualTradingApp extends StatelessWidget {
+class VirtualTradingApp extends ConsumerWidget {
   const VirtualTradingApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Purple Tomato',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Start with auth screen
-      home: const AuthScreen(),
+      // Use AuthWrapper to check auth status
+      home: const AuthWrapper(),
       // Define named routes for navigation
       routes: {
         '/home': (context) => const HomeScreen(),
@@ -53,11 +54,29 @@ class VirtualTradingApp extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const CallbackScreen()),
           ];
         }
-        // Default to auth screen
+        // Default to auth wrapper
         return [
-          MaterialPageRoute(builder: (_) => const AuthScreen()),
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
         ];
       },
     );
+  }
+}
+
+/// Wrapper that checks auth status and routes accordingly
+class AuthWrapper extends ConsumerWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(upstoxAuthProvider);
+    
+    // If authenticated, go straight to HomeScreen
+    if (authState == UpstoxAuthState.authenticated) {
+      return const HomeScreen();
+    }
+    
+    // Otherwise, show AuthScreen
+    return const AuthScreen();
   }
 }
