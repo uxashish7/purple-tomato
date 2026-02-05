@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
+// Conditional import for web-only code
+import 'dart:html' as html show window if (dart.library.io) '';
 import '../../../core/providers/upstox_auth_provider.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../market/screens/home_screen.dart';
@@ -26,7 +28,16 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
 
   Future<void> _handleCallback() async {
     try {
-      // Get the current URL
+      // Only works on web
+      if (!kIsWeb) {
+        setState(() {
+          _error = 'OAuth callback only works on web platform';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      // Get the current URL (web-only)
       final uri = Uri.parse(html.window.location.href);
       
       // Extract the authorization code from URL parameters
