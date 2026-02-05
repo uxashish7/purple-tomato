@@ -9,6 +9,9 @@ import 'features/market/screens/home_screen.dart';
 import 'features/auth/screens/auth_screen.dart';
 import 'features/auth/screens/callback_screen.dart';
 import 'core/providers/upstox_auth_provider.dart';
+// Conditional import for URL checking
+import 'core/utils/url_helper_stub.dart'
+    if (dart.library.html) 'core/utils/url_helper_web.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,32 +35,22 @@ class VirtualTradingApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Check if this is a callback route on web
+    final bool isCallback = kIsWeb && isCallbackRoute();
+    
     return MaterialApp(
       title: 'Purple Tomato',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Use AuthWrapper to check auth status
-      home: const AuthWrapper(),
+      // Use CallbackScreen if on callback route, else AuthWrapper
+      home: isCallback ? const CallbackScreen() : const AuthWrapper(),
       // Define named routes for navigation
       routes: {
         '/home': (context) => const HomeScreen(),
         '/auth': (context) => const AuthScreen(),
         '/callback': (context) => const CallbackScreen(),
-      },
-      // Handle initial route from URL (for web deep links)
-      onGenerateInitialRoutes: (String initialRouteName) {
-        // For web, check if URL contains /callback
-        if (kIsWeb && initialRouteName.contains('/callback')) {
-          return [
-            MaterialPageRoute(builder: (_) => const CallbackScreen()),
-          ];
-        }
-        // Default to auth wrapper
-        return [
-          MaterialPageRoute(builder: (_) => const AuthWrapper()),
-        ];
       },
     );
   }
