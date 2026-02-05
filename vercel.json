@@ -2,5 +2,31 @@
     "buildCommand": "chmod +x build_web.sh && ./build_web.sh",
     "outputDirectory": "build/web",
     "framework": null,
-    "installCommand": "echo 'Dependencies installed in build step'"
+    "installCommand": "echo 'Dependencies installed in build step'",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=31536000, immutable"
+                }
+            ]
+        }
+    ]
 }
