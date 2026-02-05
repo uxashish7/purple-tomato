@@ -16,14 +16,14 @@ class ApiConfig {
   // ============ UPSTOX CONFIGURATION ============
   
   /// Your Upstox API Key (Client ID)
-  static const String upstoxApiKey = 'YOUR_UPSTOX_API_KEY';
+  static const String upstoxApiKey = '58977f33-cb02-4a4e-8bc4-29abca96e91c';
   
   /// Your Upstox API Secret (Client Secret)
-  static const String upstoxApiSecret = 'YOUR_UPSTOX_API_SECRET';
+  static const String upstoxApiSecret = '0f3221dkol';
   
   /// Your registered Redirect URI
-  /// Example: 'https://yourapp.com/callback' or custom scheme 'myapp://callback'
-  static const String upstoxRedirectUri = 'YOUR_REDIRECT_URI';
+  /// Vercel production URL for OAuth callback
+  static const String upstoxRedirectUri = 'https://purple-tomato-lyart.vercel.app/callback';
   
   /// Upstox OAuth Authorization URL
   static const String upstoxAuthUrl = 'https://api.upstox.com/v2/login/authorization/dialog';

@@ -35,9 +35,9 @@ class VirtualTradingApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Skip auth screen - go directly to HomeScreen
-      // Auth code is preserved for future use
-      home: const HomeScreen(),
+      // Upstox authentication enabled
+      // Users will login with Upstox OAuth before accessing the app
+      home: const AuthScreen(),
     );
   }
 }

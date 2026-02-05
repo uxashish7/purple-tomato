@@ -1,60 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/supabase_service.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../../market/screens/home_screen.dart';
+import 'upstox_auth_screen.dart';
 
-/// Authentication screen with Google Sign-In
-class AuthScreen extends StatefulWidget {
+/// Authentication screen with Upstox OAuth and Guest mode
+class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
-
-  @override
-  State<AuthScreen> createState() => _AuthScreenState();
-}
-
-class _AuthScreenState extends State<AuthScreen> {
-  bool _isLoading = false;
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      final response = await SupabaseService.signInWithGoogle();
-      
-      if (response != null && response.user != null && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sign in cancelled or failed'),
-              backgroundColor: AppTheme.lossRed,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.lossRed,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _continueAsGuest() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +60,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               
-              const SizedBox(height: 8),
+             const SizedBox(height: 8),
               
               // Tagline
               Text(
@@ -123,86 +74,155 @@ class _AuthScreenState extends State<AuthScreen> {
               const Spacer(flex: 2),
               
               // Features list
-              _buildFeatureItem(Icons.show_chart, 'Real-time market data'),
+              _buildFeatureItem(Icons.show_chart, 'All 5000+ NSE/BSE stocks'),
               const SizedBox(height: 12),
               _buildFeatureItem(Icons.account_balance_wallet, 'Virtual ₹10 Lakh to trade'),
               const SizedBox(height: 12),
-              _buildFeatureItem(Icons.psychology, 'AI-powered advisor'),
+              _buildFeatureItem(Icons.psychology, 'AI-powered trading advisor'),
               const SizedBox(height: 12),
-              _buildFeatureItem(Icons.cloud_sync, 'Cloud sync across devices'),
+              _buildFeatureItem(Icons.speed, 'Real-time live data streaming'),
               
               const Spacer(flex: 2),
               
-              // Google Sign In Button
+              // Upstox Login Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signInWithGoogle,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const UpstoxAuthScreen(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
+                    backgroundColor: AppTheme.accentPurple,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.network(
-                              'https://www.google.com/favicon.ico',
-                              width: 24,
-                              height: 24,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.g_mobiledata,
-                                size: 24,
-                                color: Colors.red,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Continue with Google',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.link, size: 24),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Connect with Upstox',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               
               const SizedBox(height: 16),
               
-              // Continue as Guest
-              TextButton(
-                onPressed: _continueAsGuest,
-                child: Text(
-                  'Continue as Guest',
-                  style: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 14,
+              // Divider with "OR"
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: AppTheme.borderSubtle,
+                      thickness: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: AppTheme.borderSubtle,
+                      thickness: 1,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Guest Mode Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textSecondary,
+                    side: BorderSide(
+                      color: AppTheme.borderDefault,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_outline, size: 24),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Continue as Guest',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               
-              // Note about guest mode
-              Text(
-                'Guest data is stored on this device only',
-                style: TextStyle(
-                  color: AppTheme.textMuted,
-                  fontSize: 12,
+              // Guest mode info
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.infoDefault.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.infoDefault.withOpacity(0.2),
+                  ),
                 ),
-                textAlign: TextAlign.center,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppTheme.infoDefault,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Guest mode uses Yahoo Finance (popular stocks only)',
+                        style: TextStyle(
+                          color: AppTheme.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               
               const SafeArea(child: SizedBox(height: 16)),
