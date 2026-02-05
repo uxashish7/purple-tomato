@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../core/providers/upstox_auth_provider.dart';
 import '../../market/screens/home_screen.dart';
 import 'upstox_auth_screen.dart';
+// Conditional import: web uses dart:html redirect, mobile uses stub
+import 'auth_redirect_stub.dart'
+    if (dart.library.html) 'auth_redirect_web.dart';
+
 
 /// Authentication screen with Upstox OAuth and Guest mode
-class AuthScreen extends StatelessWidget {
+class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
 
+  /// Handle Upstox login with platform-specific behavior
+  Future<void> _handleUpstoxLogin(BuildContext context, WidgetRef ref) async {
+    final authUrl = ref.read(upstoxAuthProvider.notifier).getAuthorizationUrl();
+    
+    if (kIsWeb) {
+      // WEB: Redirect same tab to Upstox (automatic flow)
+      redirectToUpstox(authUrl);
+    } else {
+      // MOBILE: Navigate to manual code entry screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const UpstoxAuthScreen()),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       body: SafeArea(
@@ -89,14 +112,7 @@ class AuthScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const UpstoxAuthScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: () => _handleUpstoxLogin(context, ref),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentPurple,
                     foregroundColor: Colors.white,
