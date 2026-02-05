@@ -44,10 +44,16 @@ class UpstoxService {
   /// Exchange authorization code for access token
   Future<String?> exchangeCodeForToken(String code) async {
     try {
+      print('🔵 Exchanging code for token...');
+      print('🔵 Code: $code');
+      print('🔵 Client ID: ${ApiConfig.upstoxApiKey}');
+      print('🔵 Redirect URI: ${ApiConfig.upstoxRedirectUri}');
+      
       final response = await _dio.post(
         '/login/authorization/token',
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
+          validateStatus: (status) => true, // Don't throw on any status code
         ),
         data: {
           'code': code,
@@ -58,14 +64,29 @@ class UpstoxService {
         },
       );
 
+      print('🔵 Response status: ${response.statusCode}');
+      print('🔵 Response data: ${response.data}');
+
       if (response.statusCode == 200 && response.data['access_token'] != null) {
         final token = response.data['access_token'] as String;
+        print('✅ Token received successfully!');
         await HiveService.saveAccessToken(token);
         return token;
       }
+      
+      // Log the error response from Upstox
+      print('❌ Token exchange failed!');
+      print('❌ Status: ${response.statusCode}');
+      print('❌ Error response: ${response.data}');
+      return null;
+    } on DioException catch (e) {
+      print('❌ DioException: ${e.type}');
+      print('❌ Message: ${e.message}');
+      print('❌ Response status: ${e.response?.statusCode}');
+      print('❌ Response data: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Error exchanging code for token: $e');
+      print('❌ Unexpected error: $e');
       return null;
     }
   }
