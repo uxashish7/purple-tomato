@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:html' as html show window;
 import 'core/services/hive_service.dart';
 import 'core/services/supabase_service.dart';
 import 'shared/theme/app_theme.dart';
@@ -30,19 +29,6 @@ void main() async {
 class VirtualTradingApp extends StatelessWidget {
   const VirtualTradingApp({super.key});
 
-  // Determine initial route based on URL (for web OAuth callback)
-  Widget _getInitialScreen() {
-    if (kIsWeb) {
-      final uri = Uri.parse(html.window.location.href);
-      // Check if this is an OAuth callback
-      if (uri.path.contains('/callback')) {
-        return const CallbackScreen();
-      }
-    }
-    // Default to auth screen
-    return const AuthScreen();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -51,13 +37,26 @@ class VirtualTradingApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Use route-aware initial screen
-      home: _getInitialScreen(),
+      // Start with auth screen
+      home: const AuthScreen(),
       // Define named routes for navigation
       routes: {
         '/home': (context) => const HomeScreen(),
         '/auth': (context) => const AuthScreen(),
         '/callback': (context) => const CallbackScreen(),
+      },
+      // Handle initial route from URL (for web deep links)
+      onGenerateInitialRoutes: (String initialRouteName) {
+        // For web, check if URL contains /callback
+        if (kIsWeb && initialRouteName.contains('/callback')) {
+          return [
+            MaterialPageRoute(builder: (_) => const CallbackScreen()),
+          ];
+        }
+        // Default to auth screen
+        return [
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
+        ];
       },
     );
   }
