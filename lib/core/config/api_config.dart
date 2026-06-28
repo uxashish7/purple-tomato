@@ -1,110 +1,131 @@
-/// API Configuration Template
-/// 
-/// IMPORTANT: Copy this file and rename to `api_config_secrets.dart`
-/// Add `api_config_secrets.dart` to your `.gitignore`
-/// 
-/// To get Upstox credentials:
-/// 1. Go to https://developer.upstox.com/
-/// 2. Create an "UpLink App"
-/// 3. Copy your API Key, Secret, and set your Redirect URI
-/// 
-/// To get Gemini API Key:
-/// 1. Go to https://aistudio.google.com/
-/// 2. Create an API key
+/// API Configuration
+///
+/// All secrets are loaded via dart-define at build time.
+/// DO NOT hardcode secrets here — use environment variables instead.
+///
+/// ─── LOCAL DEVELOPMENT ──────────────────────────────────────────────────────
+/// Copy `.env.example` to `.env` and fill in your values, then run:
+///   flutter run --dart-define-from-file=.env
+///
+/// ─── CI / GITHUB ACTIONS ────────────────────────────────────────────────────
+/// Secrets are injected via GitHub Actions secrets as --dart-define flags.
+/// See .github/workflows/deploy-web.yml for the exact invocation.
+///
+/// ─── GETTING CREDENTIALS ────────────────────────────────────────────────────
+/// • Upstox  → https://developer.upstox.com/  (create an UpLink App)
+/// • Gemini  → https://aistudio.google.com/   (create an API key)
+/// • Supabase → https://app.supabase.com/     (project Settings → API)
 
 class ApiConfig {
   // ============ UPSTOX CONFIGURATION ============
-  
-  /// Your Upstox API Key (Client ID)
-  static const String upstoxApiKey = '58977f33-cb02-4a4e-8bc4-29abca96e91c';
-  
-  /// Your Upstox API Secret (Client Secret)
-  static const String upstoxApiSecret = '0f3221dkol';
-  
-  /// Your registered Redirect URI
-  /// Vercel production URL for OAuth callback
-  static const String upstoxRedirectUri = 'https://purple-tomato-lyart.vercel.app/callback';
-  
+
+  /// Upstox API Key (Client ID)
+  static const String upstoxApiKey = String.fromEnvironment(
+    'UPSTOX_API_KEY',
+    defaultValue: '',
+  );
+
+  /// Upstox API Secret (Client Secret)
+  static const String upstoxApiSecret = String.fromEnvironment(
+    'UPSTOX_API_SECRET',
+    defaultValue: '',
+  );
+
+  /// Registered Redirect URI for OAuth callback
+  static const String upstoxRedirectUri = String.fromEnvironment(
+    'UPSTOX_REDIRECT_URI',
+    defaultValue: 'https://purple-tomato-lyart.vercel.app/callback',
+  );
+
   /// Upstox OAuth Authorization URL
-  static const String upstoxAuthUrl = 'https://api.upstox.com/v2/login/authorization/dialog';
-  
+  static const String upstoxAuthUrl =
+      'https://api.upstox.com/v2/login/authorization/dialog';
+
   /// Upstox Token Exchange URL
-  static const String upstoxTokenUrl = 'https://api.upstox.com/v2/login/authorization/token';
-  
+  static const String upstoxTokenUrl =
+      'https://api.upstox.com/v2/login/authorization/token';
+
   /// Upstox API Base URL
   static const String upstoxBaseUrl = 'https://api.upstox.com/v2';
-  
+
   // ============ GEMINI CONFIGURATION ============
-  
-  /// Your Google AI (Gemini) API Key - loaded from environment variable
-  /// Set via: flutter build web --dart-define=GEMINI_API_KEY=your_key
+
+  /// Google AI (Gemini) API Key
+  /// Set via: flutter run --dart-define=GEMINI_API_KEY=your_key
   static const String geminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
     defaultValue: '',
   );
-  
+
   /// Gemini Model to use
   static const String geminiModel = 'gemini-2.5-flash';
-  
+
+  // ============ SUPABASE CONFIGURATION ============
+
+  /// Supabase project URL
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+
+  /// Supabase anonymous/public key
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  // ============ GOOGLE OAUTH CONFIGURATION ============
+
+  /// Google OAuth Web Client ID (from Google Cloud Console)
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '',
+  );
+
   // ============ ALPHA VANTAGE CONFIGURATION ============
-  
-  /// Your Alpha Vantage API Key (free at alphavantage.co)
-  static const String alphaVantageApiKey = 'IT660JF4J28F5M11';
-  
+
+  /// Alpha Vantage API Key (free at alphavantage.co)
+  static const String alphaVantageApiKey = String.fromEnvironment(
+    'ALPHA_VANTAGE_API_KEY',
+    defaultValue: '',
+  );
+
   /// Check if Alpha Vantage is configured
-  static bool get isAlphaVantageConfigured =>
-      alphaVantageApiKey != 'YOUR_ALPHA_VANTAGE_API_KEY';
-  
-  // ============ ANGEL ONE SMARTAPI CONFIGURATION ============
-  // Get credentials at: https://smartapi.angelbroking.com
-  
-  /// Your Angel One API Key
-  static const String angelOneApiKey = 'YOUR_ANGEL_ONE_API_KEY';
-  
-  /// Your Angel One Client ID (trading account ID)
-  static const String angelOneClientId = 'YOUR_CLIENT_ID';
-  
-  /// Your Angel One Password
-  static const String angelOnePassword = 'YOUR_PASSWORD';
-  
-  /// Your TOTP Secret (for 2FA - optional, can use authenticator app instead)
-  static const String angelOneTotpSecret = '';
-  
-  /// Check if Angel One is configured
-  static bool get isAngelOneConfigured =>
-      angelOneApiKey != 'YOUR_ANGEL_ONE_API_KEY' &&
-      angelOneClientId != 'YOUR_CLIENT_ID';
-  
+  static bool get isAlphaVantageConfigured => alphaVantageApiKey.isNotEmpty;
+
   // ============ APP CONFIGURATION ============
-  
+
   /// Initial virtual wallet balance (₹10,00,000)
   static const double initialWalletBalance = 1000000.0;
-  
+
   /// Price polling interval in seconds
   static const int pricePollingIntervalSeconds = 5;
-  
+
   /// Market data polling enabled
   static const bool enableLivePolling = true;
-  
+
   // ============ INDEX INSTRUMENT KEYS ============
-  
+
   /// Nifty 50 Index instrument key
   static const String nifty50Key = 'NSE_INDEX|Nifty 50';
-  
-  /// Sensex Index instrument key  
+
+  /// Sensex Index instrument key
   static const String sensexKey = 'BSE_INDEX|SENSEX';
-  
+
   // ============ HELPER METHODS ============
-  
-  /// Check if Upstox is configured
+
+  /// Check if Upstox is fully configured
   static bool get isUpstoxConfigured =>
-      upstoxApiKey != 'YOUR_UPSTOX_API_KEY' &&
-      upstoxApiSecret != 'YOUR_UPSTOX_API_SECRET' &&
-      upstoxRedirectUri != 'YOUR_REDIRECT_URI';
-  
+      upstoxApiKey.isNotEmpty &&
+      upstoxApiSecret.isNotEmpty;
+
   /// Check if Gemini is configured (API key provided via environment)
   static bool get isGeminiConfigured => geminiApiKey.isNotEmpty;
-  
+
+  /// Check if Supabase is configured
+  static bool get isSupabaseConfigured =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+
   /// Generate Upstox Authorization URL
   static String getAuthorizationUrl({String? state}) {
     final params = {
@@ -113,11 +134,11 @@ class ApiConfig {
       'redirect_uri': upstoxRedirectUri,
       if (state != null) 'state': state,
     };
-    
+
     final queryString = params.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    
+
     return '$upstoxAuthUrl?$queryString';
   }
 }

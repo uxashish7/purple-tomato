@@ -50,8 +50,14 @@ app.*.map.json
 key.properties
 google-services.json
 GoogleService-Info.plist
-*.env
-.env*
 
-# API keys and secrets (if any)
+# Environment variable files (real credentials)
+# NOTE: .env.example IS safe to commit (it contains no real secrets)
+.env
+.env.local
+.env.production
+.env.staging
+
+# API keys and secrets
 lib/core/config/secrets.dart
+*secrets*.dart

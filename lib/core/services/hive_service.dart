@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/stock.dart';
 import '../models/holding.dart';
 import '../models/order.dart';
@@ -11,13 +12,18 @@ class HiveService {
   static const String _portfolioBoxName = 'portfolio';
   static const String _ordersBoxName = 'orders';
   static const String _watchlistBoxName = 'watchlist';
-  static const String _settingsBoxName = 'settings';
+
+  // Secure storage for sensitive tokens
+  static const _secureStorage = FlutterSecureStorage();
+  static const String _accessTokenKey = 'upstox_access_token';
+
+  static bool _isInitialized = false;
+  static bool get isInitialized => _isInitialized;
 
   static late Box<Wallet> _walletBox;
   static late Box<Holding> _portfolioBox;
   static late Box<Order> _ordersBox;
   static late Box<Stock> _watchlistBox;
-  static late Box<dynamic> _settingsBox;
 
   /// Initialize Hive and register adapters
   static Future<void> init() async {
@@ -32,7 +38,6 @@ class HiveService {
     _portfolioBox = await Hive.openBox<Holding>(_portfolioBoxName);
     _ordersBox = await Hive.openBox<Order>(_ordersBoxName);
     _watchlistBox = await Hive.openBox<Stock>(_watchlistBoxName);
-    _settingsBox = await Hive.openBox(_settingsBoxName);
 
     // Initialize wallet if not exists
     if (_walletBox.isEmpty) {
@@ -41,6 +46,8 @@ class HiveService {
         Wallet.initial(ApiConfig.initialWalletBalance),
       );
     }
+
+    _isInitialized = true;
   }
 
   // ============ WALLET OPERATIONS ============
@@ -87,7 +94,7 @@ class HiveService {
       return _portfolioBox.values.firstWhere(
         (h) => h.stock.instrumentKey == instrumentKey,
       );
-    } catch (_) {
+    } on StateError {
       return null;
     }
   }
@@ -144,25 +151,30 @@ class HiveService {
     return _watchlistBox.containsKey(instrumentKey);
   }
 
-  // ============ SETTINGS OPERATIONS ============
+  // ============ SETTINGS / AUTH TOKEN OPERATIONS ============
+  // Access tokens are stored in flutter_secure_storage (encrypted)
+  // to avoid exposing sensitive credentials in Hive (plaintext).
 
-  /// Get access token
-  static String? getAccessToken() {
-    return _settingsBox.get('access_token');
+  /// Get access token from secure storage
+  static Future<String?> getAccessToken() async {
+    return _secureStorage.read(key: _accessTokenKey);
   }
 
-  /// Save access token
+  /// Save access token to secure storage
   static Future<void> saveAccessToken(String token) async {
-    await _settingsBox.put('access_token', token);
+    await _secureStorage.write(key: _accessTokenKey, value: token);
   }
 
-  /// Clear access token
+  /// Clear access token from secure storage
   static Future<void> clearAccessToken() async {
-    await _settingsBox.delete('access_token');
+    await _secureStorage.delete(key: _accessTokenKey);
   }
 
-  /// Check if using mock mode
-  static bool get isMockMode => getAccessToken() == null;
+  /// Check if in mock mode (no access token stored)
+  static Future<bool> get isMockMode async {
+    final token = await getAccessToken();
+    return token == null || token.isEmpty;
+  }
 
   // ============ RESET OPERATIONS ============
 
@@ -183,6 +195,6 @@ class HiveService {
     await _portfolioBox.close();
     await _ordersBox.close();
     await _watchlistBox.close();
-    await _settingsBox.close();
+    _isInitialized = false;
   }
 }

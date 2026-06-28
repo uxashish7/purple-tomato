@@ -33,7 +33,24 @@ jobs:
     - name: Build web
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: flutter build web --release --base-href "/purple-tomato/" --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
+        UPSTOX_API_KEY: ${{ secrets.UPSTOX_API_KEY }}
+        UPSTOX_API_SECRET: ${{ secrets.UPSTOX_API_SECRET }}
+        UPSTOX_REDIRECT_URI: ${{ secrets.UPSTOX_REDIRECT_URI }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+      run: |
+        flutter build web --release \
+          --base-href "/purple-tomato/" \
+          --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY \
+          --dart-define=UPSTOX_API_KEY=$UPSTOX_API_KEY \
+          --dart-define=UPSTOX_API_SECRET=$UPSTOX_API_SECRET \
+          --dart-define=UPSTOX_REDIRECT_URI=$UPSTOX_REDIRECT_URI \
+          --dart-define=SUPABASE_URL=$SUPABASE_URL \
+          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+          --dart-define=GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID \
+          --dart-define=ALPHA_VANTAGE_API_KEY=$ALPHA_VANTAGE_API_KEY
     
     - name: Setup Pages
       uses: actions/configure-pages@v4

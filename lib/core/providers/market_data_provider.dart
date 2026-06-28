@@ -4,6 +4,7 @@ import '../models/market_quote.dart';
 import '../services/upstox_service.dart';
 import '../services/yahoo_finance_service.dart';
 import '../config/api_config.dart';
+import '../utils/app_logger.dart';
 import 'watchlist_provider.dart';
 import 'portfolio_provider.dart';
 
@@ -18,66 +19,86 @@ final yahooFinanceServiceProvider = Provider<YahooFinanceService>((ref) {
 });
 
 /// Provider for index quotes (Nifty 50, Sensex)
-/// Uses mock data directly for reliability - always shows indices
+/// Uses Yahoo Finance with mock fallback for reliability.
 final indexQuotesProvider = FutureProvider<List<IndexQuote>>((ref) async {
-  // Always return mock data immediately for reliability
-  // These values will be updated when live APIs are connected
   final mockData = [
     IndexQuote.mock(name: 'NIFTY 50', instrumentKey: '^NSEI', value: 26178.70, change: 146.55, changePercent: 0.56),
     IndexQuote.mock(name: 'SENSEX', instrumentKey: '^BSESN', value: 85063.34, change: 478.29, changePercent: 0.57),
   ];
-  
-  // Try to get live data in background but always return mock first
+
   final yahooService = ref.watch(yahooFinanceServiceProvider);
-  
+
   try {
     final quotes = await yahooService.getIndices().timeout(
       const Duration(seconds: 5),
       onTimeout: () => mockData,
     );
     if (quotes.isNotEmpty && quotes.first.value > 0) {
-      print('Using Yahoo Finance for index data');
+      AppLogger.info('Using Yahoo Finance for index data', tag: 'MarketData');
       return quotes;
     }
   } catch (e) {
-    print('Yahoo Finance failed, using mock data: $e');
+    AppLogger.warn('Yahoo Finance failed, using mock data', tag: 'MarketData', error: e);
   }
-  
-  print('Using mock index data');
+
+  AppLogger.info('Using mock index data', tag: 'MarketData');
   return mockData;
 });
 
-/// Provider for live market quotes
-/// Combines watchlist and portfolio stocks for live price updates
+/// Provider for live market quotes.
+/// Passes the current key-set to [LiveQuotesNotifier].
+/// The notifier itself tracks changes and avoids timer recreation on minor rebuilds.
 final liveQuotesProvider = StateNotifierProvider<LiveQuotesNotifier, Map<String, MarketQuote>>((ref) {
   final service = ref.watch(upstoxServiceProvider);
   final watchlist = ref.watch(watchlistProvider);
   final holdings = ref.watch(portfolioProvider);
-  
-  // Combine instrument keys from watchlist and portfolio
+
   final watchlistKeys = watchlist.map((s) => s.instrumentKey).toSet();
   final holdingKeys = holdings.map((h) => h.stock.instrumentKey).toSet();
   final allKeys = {...watchlistKeys, ...holdingKeys};
-  
-  return LiveQuotesNotifier(service, allKeys.toList());
+
+  return LiveQuotesNotifier(service, allKeys);
 });
 
-/// Live quotes state notifier with polling
+/// Live quotes state notifier with polling.
+///
+/// Timer lifecycle:
+/// • Started once on construction.
+/// • Cancelled and restarted only when the instrument key-set actually changes,
+///   preventing timer multiplication on every Riverpod rebuild.
 class LiveQuotesNotifier extends StateNotifier<Map<String, MarketQuote>> {
   final UpstoxService _service;
-  final List<String> _instrumentKeys;
+  Set<String> _instrumentKeys;
   Timer? _pollingTimer;
 
-  LiveQuotesNotifier(this._service, this._instrumentKeys) : super({}) {
+  LiveQuotesNotifier(this._service, Set<String> instrumentKeys)
+      : _instrumentKeys = instrumentKeys,
+        super({}) {
     if (_instrumentKeys.isNotEmpty) {
-      _fetchQuotes(); // Initial fetch
+      _fetchQuotes();
       _startPolling();
+    }
+  }
+
+  /// Update the instrument keys without recreating the entire notifier.
+  /// Only restarts polling if the key-set has changed.
+  void updateKeys(Set<String> newKeys) {
+    if (newKeys.length == _instrumentKeys.length &&
+        newKeys.every(_instrumentKeys.contains)) {
+      return; // No change — keep existing timer
+    }
+    _instrumentKeys = newKeys;
+    if (_instrumentKeys.isNotEmpty) {
+      _fetchQuotes();
+      _restartPolling();
+    } else {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
     }
   }
 
   void _startPolling() {
     if (!ApiConfig.enableLivePolling) return;
-    
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(
       Duration(seconds: ApiConfig.pricePollingIntervalSeconds),
@@ -85,16 +106,21 @@ class LiveQuotesNotifier extends StateNotifier<Map<String, MarketQuote>> {
     );
   }
 
+  void _restartPolling() {
+    _pollingTimer?.cancel();
+    _startPolling();
+  }
+
   Future<void> _fetchQuotes() async {
     if (_instrumentKeys.isEmpty) return;
-    
+
     try {
-      final quotes = await _service.getLiveQuotes(_instrumentKeys);
+      final quotes = await _service.getLiveQuotes(_instrumentKeys.toList());
       if (mounted) {
         state = quotes;
       }
     } catch (e) {
-      print('Error fetching live quotes: $e');
+      AppLogger.warn('Error fetching live quotes', tag: 'MarketData', error: e);
     }
   }
 
