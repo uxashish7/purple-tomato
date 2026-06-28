@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../config/api_config.dart';
 import '../models/stock.dart';
@@ -34,7 +35,10 @@ class UpstoxService {
   }
 
   /// Check if user is authenticated with Upstox
-  bool get isAuthenticated => HiveService.getAccessToken() != null;
+  Future<bool> get isAuthenticated async {
+    final token = await HiveService.getAccessToken();
+    return token != null && token.isNotEmpty;
+  }
 
   /// Get authorization URL for OAuth login
   String getAuthorizationUrl({String? state}) {
@@ -44,16 +48,11 @@ class UpstoxService {
   /// Exchange authorization code for access token
   Future<String?> exchangeCodeForToken(String code) async {
     try {
-      print('🔵 Exchanging code for token...');
-      print('🔵 Code: $code');
-      print('🔵 Client ID: ${ApiConfig.upstoxApiKey}');
-      print('🔵 Redirect URI: ${ApiConfig.upstoxRedirectUri}');
-      
       final response = await _dio.post(
         '/login/authorization/token',
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
-          validateStatus: (status) => true, // Don't throw on any status code
+          validateStatus: (status) => true,
         ),
         data: {
           'code': code,
@@ -64,36 +63,28 @@ class UpstoxService {
         },
       );
 
-      print('🔵 Response status: ${response.statusCode}');
-      print('🔵 Response data: ${response.data}');
-
       if (response.statusCode == 200 && response.data['access_token'] != null) {
         final token = response.data['access_token'] as String;
-        print('✅ Token received successfully!');
         await HiveService.saveAccessToken(token);
         return token;
       }
-      
-      // Log the error response from Upstox
-      print('❌ Token exchange failed!');
-      print('❌ Status: ${response.statusCode}');
-      print('❌ Error response: ${response.data}');
+
       return null;
     } on DioException catch (e) {
-      print('❌ DioException: ${e.type}');
-      print('❌ Message: ${e.message}');
-      print('❌ Response status: ${e.response?.statusCode}');
-      print('❌ Response data: ${e.response?.data}');
+      // Log non-sensitive error details only
+      final status = e.response?.statusCode;
+      final type = e.type.toString();
+      debugPrint('UpstoxService: Token exchange DioException [$type] status=$status');
       return null;
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      debugPrint('UpstoxService: Token exchange unexpected error: ${e.runtimeType}');
       return null;
     }
   }
 
   /// Search stocks by query
   Future<List<Stock>> searchStocks(String query) async {
-    if (!isAuthenticated) {
+    if (!await isAuthenticated) {
       return _getMockSearchResults(query);
     }
 
@@ -109,7 +100,7 @@ class UpstoxService {
       }
       return [];
     } catch (e) {
-      print('Error searching stocks: $e');
+      debugPrint('UpstoxService: searchStocks error: ${e.runtimeType}');
       return _getMockSearchResults(query);
     }
   }
@@ -117,8 +108,8 @@ class UpstoxService {
   /// Get LTP (Last Traded Price) for instruments
   Future<Map<String, MarketQuote>> getLiveQuotes(List<String> instrumentKeys) async {
     if (instrumentKeys.isEmpty) return {};
-    
-    if (!isAuthenticated) {
+
+    if (!await isAuthenticated) {
       return _getMockQuotes(instrumentKeys);
     }
 
@@ -132,16 +123,16 @@ class UpstoxService {
       if (response.statusCode == 200 && response.data['data'] != null) {
         final Map<String, dynamic> data = response.data['data'];
         final Map<String, MarketQuote> quotes = {};
-        
+
         data.forEach((key, value) {
           quotes[key] = MarketQuote.fromUpstoxJson(key, value);
         });
-        
+
         return quotes;
       }
       return {};
     } catch (e) {
-      print('Error fetching live quotes: $e');
+      debugPrint('UpstoxService: getLiveQuotes error: ${e.runtimeType}');
       return _getMockQuotes(instrumentKeys);
     }
   }
@@ -149,8 +140,8 @@ class UpstoxService {
   /// Get full market quote for instruments
   Future<Map<String, MarketQuote>> getFullQuotes(List<String> instrumentKeys) async {
     if (instrumentKeys.isEmpty) return {};
-    
-    if (!isAuthenticated) {
+
+    if (!await isAuthenticated) {
       return _getMockQuotes(instrumentKeys);
     }
 
@@ -164,30 +155,30 @@ class UpstoxService {
       if (response.statusCode == 200 && response.data['data'] != null) {
         final Map<String, dynamic> data = response.data['data'];
         final Map<String, MarketQuote> quotes = {};
-        
+
         data.forEach((key, value) {
           quotes[key] = MarketQuote.fromUpstoxJson(key, value);
         });
-        
+
         return quotes;
       }
       return {};
     } catch (e) {
-      print('Error fetching full quotes: $e');
+      debugPrint('UpstoxService: getFullQuotes error: ${e.runtimeType}');
       return _getMockQuotes(instrumentKeys);
     }
   }
 
   /// Get index quotes (Nifty 50, Sensex)
   Future<List<IndexQuote>> getIndexQuotes() async {
-    if (!isAuthenticated) {
+    if (!await isAuthenticated) {
       return _getMockIndexQuotes();
     }
 
     try {
       final indices = [ApiConfig.nifty50Key, ApiConfig.sensexKey];
       final symbolParam = indices.join(',');
-      
+
       final response = await _dio.get(
         '/market-quote/ltp',
         queryParameters: {'symbol': symbolParam},
@@ -196,7 +187,7 @@ class UpstoxService {
       if (response.statusCode == 200 && response.data['data'] != null) {
         final Map<String, dynamic> data = response.data['data'];
         final List<IndexQuote> quotes = [];
-        
+
         if (data.containsKey(ApiConfig.nifty50Key)) {
           quotes.add(IndexQuote.fromUpstoxJson(
             'NIFTY 50',
@@ -204,7 +195,7 @@ class UpstoxService {
             data[ApiConfig.nifty50Key],
           ));
         }
-        
+
         if (data.containsKey(ApiConfig.sensexKey)) {
           quotes.add(IndexQuote.fromUpstoxJson(
             'SENSEX',
@@ -212,15 +203,16 @@ class UpstoxService {
             data[ApiConfig.sensexKey],
           ));
         }
-        
+
         return quotes;
       }
       return _getMockIndexQuotes();
     } catch (e) {
-      print('Error fetching index quotes: $e');
+      debugPrint('UpstoxService: getIndexQuotes error: ${e.runtimeType}');
       return _getMockIndexQuotes();
     }
   }
+
 
   /// Logout - clear access token
   Future<void> logout() async {

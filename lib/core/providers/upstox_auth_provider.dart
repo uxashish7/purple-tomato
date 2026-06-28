@@ -23,8 +23,9 @@ class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
   String? get errorMessage => _errorMessage;
 
   /// Check current auth status
-  void _checkAuthStatus() {
-    if (HiveService.getAccessToken() != null) {
+  Future<void> _checkAuthStatus() async {
+    final token = await HiveService.getAccessToken();
+    if (token != null && token.isNotEmpty) {
       state = UpstoxAuthState.authenticated;
     } else {
       state = UpstoxAuthState.unauthenticated;

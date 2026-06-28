@@ -9,6 +9,7 @@ import '../../../core/providers/upstox_auth_provider.dart';
 import '../../../core/services/hive_service.dart';
 import '../../../core/services/supabase_service.dart';
 import '../../../shared/theme/app_theme.dart';
+import '../../../shared/widgets/mock_mode_banner.dart';
 import '../../../shared/widgets/portfolio_chart.dart';
 import '../../portfolio/screens/portfolio_screen.dart';
 import '../../portfolio/screens/transactions_screen.dart';
@@ -254,6 +255,9 @@ class _HomeContent extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Demo mode banner — visible only when running without live data
+              const MockModeBanner(),
+
               // Search Bar linked to Stock Search
               GestureDetector(
                 onTap: () {

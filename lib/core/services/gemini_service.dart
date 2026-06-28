@@ -3,6 +3,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 import '../config/api_config.dart';
 import '../models/holding.dart';
+import '../utils/app_logger.dart';
 
 /// Service for interacting with Google Gemini AI
 class GeminiService {
@@ -28,7 +29,7 @@ class GeminiService {
 
     try {
       final portfolioJson = _buildPortfolioJson(holdings, livePrices);
-      
+
       final prompt = '''
 You are a conservative financial risk manager analyzing a virtual trading portfolio for educational purposes.
 
@@ -47,10 +48,10 @@ Do NOT provide specific buy/sell advice with target prices as this is for educat
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
-      
+
       return response.text ?? 'Unable to generate analysis. Please try again.';
     } catch (e) {
-      print('Error analyzing portfolio with Gemini: $e');
+      AppLogger.error('Error analyzing portfolio with Gemini', tag: 'GeminiService', error: e);
       return _getMockAnalysis(holdings);
     }
   }
@@ -76,10 +77,10 @@ Mention that this is for informational purposes only, not investment advice.
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
-      
+
       return response.text ?? 'Unable to generate insights. Please try again.';
     } catch (e) {
-      print('Error fetching market insights: $e');
+      AppLogger.error('Error fetching market insights', tag: 'GeminiService', error: e);
       return _getMockMarketInsights();
     }
   }
@@ -104,26 +105,26 @@ Keep response under 100 words. This is for educational/virtual trading only - no
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
-      
+
       return response.text ?? 'Unable to generate analysis.';
     } catch (e) {
-      print('Error analyzing stock with Gemini: $e');
+      AppLogger.error('Error analyzing stock', tag: 'GeminiService', error: e);
       return _getMockStockAnalysis(symbol);
     }
   }
 
   /// Chat with AI assistant - conversational interface
   Future<String> chat(String userMessage, String portfolioContext) async {
-    print('GeminiService: isConfigured=$isConfigured');
-    
+    AppLogger.debug('isConfigured=$isConfigured', tag: 'GeminiService');
+
     if (!isConfigured) {
-      print('GeminiService: Not configured, using mock response');
+      AppLogger.debug('Not configured, using mock response', tag: 'GeminiService');
       return _getMockChatResponse(userMessage, portfolioContext);
     }
 
     try {
-      print('GeminiService: Calling Gemini API with model: ${ApiConfig.geminiModel}');
-      
+      AppLogger.debug('Calling Gemini API with model: ${ApiConfig.geminiModel}', tag: 'GeminiService');
+
       final prompt = '''
 You are a friendly and helpful AI trading assistant for a virtual trading app. 
 You provide educational insights about stocks, markets, and trading strategies.
@@ -147,13 +148,12 @@ Respond naturally to the user's message:
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
-      
-      print('GeminiService: Got response from Gemini');
+
+      AppLogger.debug('Got response from Gemini', tag: 'GeminiService');
       return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
     } catch (e) {
-      print('GeminiService ERROR: $e');
-      // Return error message instead of mock so user knows there's an issue
-      return '⚠️ AI temporarily unavailable. Error: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}...\n\nPlease try again in a moment.';
+      AppLogger.error('Chat error', tag: 'GeminiService', error: e);
+      return '⚠️ AI temporarily unavailable. Please try again in a moment.';
     }
   }
 
@@ -162,13 +162,12 @@ Respond naturally to the user's message:
     String userMessage,
     String portfolioContext, {
     Uint8List? imageBytes,
-    Uint8List? pdfBytes,  // Changed from pdfPath to pdfBytes
+    Uint8List? pdfBytes,
   }) async {
-    print('GeminiService: chatWithAttachments called');
-    print('  - hasImage: ${imageBytes != null}, hasPdf: ${pdfBytes != null}');
-    
+    AppLogger.debug('chatWithAttachments called — hasImage: ${imageBytes != null}, hasPdf: ${pdfBytes != null}', tag: 'GeminiService');
+
     if (!isConfigured) {
-      print('GeminiService: Not configured, using mock response');
+      AppLogger.debug('Not configured, using mock response', tag: 'GeminiService');
       return _getMockChatResponse(userMessage, portfolioContext);
     }
 
@@ -195,10 +194,8 @@ Respond naturally to the user's message:
 ''';
 
       List<Content> content = [];
-      
+
       if (imageBytes != null) {
-        // Add image for analysis
-        print('GeminiService: Sending image with prompt');
         content = [
           Content.multi([
             TextPart(prompt),
@@ -206,8 +203,6 @@ Respond naturally to the user's message:
           ])
         ];
       } else if (pdfBytes != null) {
-        // Send PDF bytes directly (no file operations needed)
-        print('GeminiService: Sending PDF with prompt');
         content = [
           Content.multi([
             TextPart(prompt),
@@ -217,14 +212,13 @@ Respond naturally to the user's message:
       } else {
         content = [Content.text(prompt)];
       }
-      
+
       final response = await _model!.generateContent(content);
-      
-      print('GeminiService: Got response from Gemini');
+      AppLogger.debug('Got response from Gemini', tag: 'GeminiService');
       return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
     } catch (e) {
-      print('GeminiService ERROR: $e');
-      return '⚠️ AI temporarily unavailable. Error: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}...\n\nPlease try again in a moment.';
+      AppLogger.error('chatWithAttachments error', tag: 'GeminiService', error: e);
+      return '⚠️ AI temporarily unavailable. Please try again in a moment.';
     }
   }
 
@@ -270,58 +264,40 @@ Respond naturally to the user's message:
 
   String _getMockAnalysis(List<Holding> holdings) {
     if (holdings.isEmpty) {
-      return '''
-**Portfolio Analysis**
-
-Your portfolio is currently empty. Here are some suggestions to get started:
-
-• **Diversify from the start**: Consider spreading investments across 4-5 different sectors
-• **Start with large-caps**: Blue-chip stocks offer stability for beginners
-• **Set allocation limits**: Don't put more than 20% in any single stock
-
-*This is a virtual trading simulation for educational purposes only.*
-''';
+      return 'Portfolio Analysis\n\n'
+          'Your portfolio is currently empty. Here are some suggestions to get started:\n\n'
+          '• Diversify from the start: Consider spreading investments across 4-5 different sectors\n'
+          '• Start with large-caps: Blue-chip stocks offer stability for beginners\n'
+          '• Set allocation limits: Do not put more than 20% in any single stock\n\n'
+          'This is a virtual trading simulation for educational purposes only.';
     }
 
     final symbols = holdings.map((h) => h.stock.symbol).join(', ');
-    return '''
-**Portfolio Analysis**
-
-📊 **Current Holdings**: $symbols
-
-⚠️ **Sector Concentration Risk**: 
-Your portfolio appears to be concentrated. Consider adding stocks from different sectors like Pharma, FMCG, or IT to balance your exposure.
-
-📈 **Diversification Score**: 5/10
-With ${holdings.length} holding(s), there's room for better diversification.
-
-💡 **Recommendations**:
-• Add defensive stocks (FMCG, Pharma) to balance volatility
-• Consider limiting any single stock to 15-20% of total portfolio
-• Review periodically and rebalance if any position grows too large
-
-*This is for educational purposes only - not real investment advice.*
-''';
+    return 'Portfolio Analysis\n\n'
+        'Current Holdings: $symbols\n\n'
+        '⚠️ Sector Concentration Risk:\n'
+        'Your portfolio appears to be concentrated. Consider adding stocks from different sectors like Pharma, FMCG, or IT to balance your exposure.\n\n'
+        '📈 Diversification Score: 5/10\n'
+        'With ${holdings.length} holding(s), there is room for better diversification.\n\n'
+        'Recommendations:\n'
+        '• Add defensive stocks (FMCG, Pharma) to balance volatility\n'
+        '• Consider limiting any single stock to 15-20% of total portfolio\n'
+        '• Review periodically and rebalance if any position grows too large\n\n'
+        'This is for educational purposes only - not real investment advice.';
   }
 
   String _getMockMarketInsights() {
-    return '''
-**Market Overview** (Virtual Trading Mode)
-
-📈 **Sentiment**: Cautiously optimistic
-
-**Sectors to Watch**:
-• IT - Strong global demand continues
-• Banking - Interest rate decisions key
-• Auto - EV transition opportunities
-
-⚠️ **Risk Factors**:
-• Global economic uncertainty
-• Currency fluctuations
-• Regulatory changes
-
-*This is for educational purposes. In live mode with Gemini configured, you'll get real-time AI insights.*
-''';
+    return 'Market Overview (Demo Mode)\n\n'
+        '📈 Sentiment: Cautiously optimistic\n\n'
+        'Sectors to Watch:\n'
+        '• IT - Strong global demand continues\n'
+        '• Banking - Interest rate decisions key\n'
+        '• Auto - EV transition opportunities\n\n'
+        '⚠️ Risk Factors:\n'
+        '• Global economic uncertainty\n'
+        '• Currency fluctuations\n'
+        '• Regulatory changes\n\n'
+        'This is for educational purposes. Connect your Gemini API key for real-time AI insights.';
   }
 
   String _getMockStockAnalysis(String symbol) {

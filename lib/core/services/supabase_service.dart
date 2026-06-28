@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:uuid/uuid.dart';
+import '../config/api_config.dart';
 import '../models/portfolio_snapshot.dart';
 
 /// Service for managing Supabase database and authentication
@@ -12,12 +13,13 @@ class SupabaseService {
   static const _storage = FlutterSecureStorage();
   static const _deviceIdKey = 'purple_tomato_device_id';
 
-  /// Supabase configuration
-  static const String _supabaseUrl = 'https://bbsbjjumkussuifslbnr.supabase.co';
-  static const String _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJic2JqanVta3Vzc3VpZnNsYm5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzYwNDAsImV4cCI6MjA4MzY1MjA0MH0.VjktuRHK41mJN-A1U6ptP2yIMpJ6G7rYGWXbyODUc70';
-  
-  // Google OAuth Web Client ID from Google Cloud Console
-  static const String _googleWebClientId = '933329104418-trk7cpj3bt59kklei793cqs3o2s6euo0.apps.googleusercontent.com';
+  /// Supabase configuration — loaded from dart-define environment variables.
+  /// See ApiConfig and .env.example for setup instructions.
+  static String get _supabaseUrl => ApiConfig.supabaseUrl;
+  static String get _supabaseAnonKey => ApiConfig.supabaseAnonKey;
+
+  // Google OAuth Web Client ID — loaded from dart-define environment variables.
+  static String get _googleWebClientId => ApiConfig.googleWebClientId;
 
   /// Get Supabase client
   static SupabaseClient get client {
@@ -46,6 +48,11 @@ class SupabaseService {
 
   /// Initialize Supabase
   static Future<void> initialize() async {
+    if (!ApiConfig.isSupabaseConfigured) {
+      debugPrint('SupabaseService: Supabase not configured (missing SUPABASE_URL or SUPABASE_ANON_KEY). Running without cloud sync.');
+      return;
+    }
+
     try {
       await Supabase.initialize(
         url: _supabaseUrl,
