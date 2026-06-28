@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -227,7 +228,7 @@ class _UpstoxAuthScreenState extends ConsumerState<UpstoxAuthScreen> {
                 child: TextButton(
                   onPressed: () {
                     ref.read(upstoxAuthProvider.notifier).skipAuth();
-                    Navigator.pop(context);
+                    context.pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Using app with simulated data'),
@@ -358,7 +359,7 @@ class _UpstoxAuthScreenState extends ConsumerState<UpstoxAuthScreen> {
             backgroundColor: AppTheme.profitGreen,
           ),
         );
-        Navigator.pop(context);
+        context.pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

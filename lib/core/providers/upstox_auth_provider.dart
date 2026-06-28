@@ -89,3 +89,6 @@ final isMockModeProvider = Provider<bool>((ref) {
   final authState = ref.watch(upstoxAuthProvider);
   return authState != UpstoxAuthState.authenticated;
 });
+
+/// Provider to track if user chose to continue as guest
+final isGuestModeProvider = StateProvider<bool>((ref) => false);

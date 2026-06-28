@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/models/stock.dart';
+import '../../../domain/models/stock.dart';
 import '../../../core/providers/market_data_provider.dart';
 import '../../../core/providers/watchlist_provider.dart';
 import '../../../shared/theme/app_theme.dart';
-import 'stock_detail_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_names.dart';
 
 class StockSearchScreen extends ConsumerStatefulWidget {
   const StockSearchScreen({super.key});
@@ -73,7 +74,7 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           'Search Stocks',
@@ -193,11 +194,9 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
               exchange: 'NSE',
               instrumentType: 'EQ',
             );
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => StockDetailScreen(stock: mockStock),
-              ),
+            context.pushNamed(
+              RouteNames.stockDetail,
+              extra: mockStock,
             );
           },
         )),
@@ -223,11 +222,9 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
               stock: stock,
               isInWatchlist: isInWatchlist,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StockDetailScreen(stock: stock),
-                  ),
+                context.pushNamed(
+                  RouteNames.stockDetail,
+                  extra: stock,
                 );
               },
               onWatchlistTap: () {

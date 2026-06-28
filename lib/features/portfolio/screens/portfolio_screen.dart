@@ -1,10 +1,12 @@
+import 'package:purple_tomato/core/constants/route_names.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/portfolio_provider.dart';
 import '../../../core/providers/market_data_provider.dart';
 import '../../../core/providers/wallet_provider.dart';
 import '../../../shared/theme/app_theme.dart';
-import '../../../shared/widgets/pnl_display.dart';
+import '../../../shared/widgets/financial/pnl_display.dart';
 import '../../market/screens/stock_detail_screen.dart';
 import '../../market/screens/stock_search_screen.dart';
 import 'transactions_screen.dart';
@@ -265,12 +267,10 @@ class PortfolioScreen extends ConsumerWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => StockDetailScreen(stock: holding.stock),
-                        ),
-                      );
+                      context.pushNamed(
+                  RouteNames.stockDetail,
+                  extra: holding.stock,
+                );
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(

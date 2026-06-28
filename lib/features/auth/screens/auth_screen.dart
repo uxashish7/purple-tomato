@@ -5,6 +5,8 @@ import '../../../shared/theme/app_theme.dart';
 import '../../../core/providers/upstox_auth_provider.dart';
 import '../../market/screens/home_screen.dart';
 import 'upstox_auth_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_names.dart';
 // Conditional import: web uses dart:html redirect, mobile uses stub
 import 'auth_redirect_stub.dart'
     if (dart.library.html) 'auth_redirect_web.dart';
@@ -23,10 +25,7 @@ class AuthScreen extends ConsumerWidget {
       redirectToUpstox(authUrl);
     } else {
       // MOBILE: Navigate to manual code entry screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const UpstoxAuthScreen()),
-      );
+      context.pushNamed(RouteNames.upstoxAuth);
     }
   }
 
@@ -177,9 +176,8 @@ class AuthScreen extends ConsumerWidget {
                 height: 56,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    );
+                    ref.read(isGuestModeProvider.notifier).state = true;
+                    context.goNamed(RouteNames.home);
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.textSecondary,

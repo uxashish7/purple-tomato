@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/models/stock.dart';
+import '../../../domain/models/stock.dart';
 import '../../../core/providers/market_data_provider.dart';
 import '../../../core/providers/watchlist_provider.dart';
 import '../../../core/providers/portfolio_provider.dart';
 import '../../../core/providers/wallet_provider.dart';
 import '../../../core/services/yahoo_finance_service.dart';
 import '../../../shared/theme/app_theme.dart';
-import '../../../shared/widgets/stock_candlestick_chart.dart';
+import '../widgets/stock_detail_components.dart';
+import '../../../shared/widgets/charts/stock_candlestick_chart.dart';
+import 'package:go_router/go_router.dart';
 
 class StockDetailScreen extends ConsumerStatefulWidget {
   final Stock stock;
@@ -93,7 +95,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
@@ -241,10 +243,10 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _OHLCItem(label: 'Open', value: open),
-                  _OHLCItem(label: 'High', value: high),
-                  _OHLCItem(label: 'Low', value: low),
-                  _OHLCItem(label: 'Close', value: close),
+                  OHLCItem(label: 'Open', value: open),
+                  OHLCItem(label: 'High', value: high),
+                  OHLCItem(label: 'Low', value: low),
+                  OHLCItem(label: 'Close', value: close),
                 ],
               ),
             ),
@@ -349,19 +351,19 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _HoldingInfoModern(label: 'Qty', value: '${holding.quantity}'),
+                          HoldingInfoModern(label: 'Qty', value: '${holding.quantity}'),
                           Container(
                             width: 1,
                             height: 30,
                             color: Colors.white.withOpacity(0.1),
                           ),
-                          _HoldingInfoModern(label: 'Avg', value: '₹${holding.avgBuyPrice.toStringAsFixed(0)}'),
+                          HoldingInfoModern(label: 'Avg', value: '₹${holding.avgBuyPrice.toStringAsFixed(0)}'),
                           Container(
                             width: 1,
                             height: 30,
                             color: Colors.white.withOpacity(0.1),
                           ),
-                          _HoldingInfoModern(label: 'Invested', value: '₹${holding.investedValue.toStringAsFixed(0)}'),
+                          HoldingInfoModern(label: 'Invested', value: '₹${holding.investedValue.toStringAsFixed(0)}'),
                         ],
                       ),
                     ),
@@ -484,7 +486,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          _QuantityButton(
+                          QuantityButton(
                             icon: Icons.remove,
                             onTap: () {
                               if (_quantity > 1) {
@@ -512,7 +514,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                               ),
                             ),
                           ),
-                          _QuantityButton(
+                          QuantityButton(
                             icon: Icons.add,
                             onTap: () => setState(() => _quantity++),
                           ),
@@ -767,115 +769,3 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
   }
 }
 
-class _OHLCItem extends StatelessWidget {
-  final String label;
-  final double value;
-
-  const _OHLCItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AppTheme.textMuted,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value.toStringAsFixed(2),
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HoldingInfo extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _HoldingInfo({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HoldingInfoModern extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _HoldingInfoModern({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: AppTheme.textMuted,
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuantityButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _QuantityButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppTheme.cardElevated,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: AppTheme.textPrimary),
-      ),
-    );
-  }
-}

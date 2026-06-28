@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:purple_tomato/core/models/wallet.dart';
+import 'package:purple_tomato/domain/models/wallet.dart';
 
 /// Unit tests for Wallet model business logic.
 /// These tests run without any Flutter widget tree or plugin dependencies.

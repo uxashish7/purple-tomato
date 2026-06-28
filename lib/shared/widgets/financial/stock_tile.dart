@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/models/stock.dart';
+import '../../domain/models/stock.dart';
 import '../../shared/theme/app_theme.dart';
 import 'price_change_indicator.dart';
 

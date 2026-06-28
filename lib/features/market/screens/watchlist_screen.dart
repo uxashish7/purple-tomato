@@ -1,9 +1,11 @@
+import 'package:purple_tomato/core/constants/route_names.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/watchlist_provider.dart';
 import '../../../core/providers/market_data_provider.dart';
 import '../../../shared/theme/app_theme.dart';
-import '../../../shared/widgets/stock_tile.dart';
+import '../../../shared/widgets/financial/stock_tile.dart';
 import 'stock_detail_screen.dart';
 import 'stock_search_screen.dart';
 
@@ -126,12 +128,10 @@ class WatchlistScreen extends ConsumerWidget {
             change: quote?.change,
             changePercent: quote?.changePercent,
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => StockDetailScreen(stock: stock),
-                ),
-              );
+              context.pushNamed(
+                  RouteNames.stockDetail,
+                  extra: stock,
+                );
             },
           ),
         );

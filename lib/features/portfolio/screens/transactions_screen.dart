@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../core/services/hive_service.dart';
-import '../../../core/models/order.dart';
+import '../../../domain/models/order.dart';
 import '../../../shared/theme/app_theme.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
@@ -180,7 +181,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => context.pop(),
                   icon: const Icon(Icons.close, color: AppTheme.textMuted),
                 ),
               ],
@@ -194,7 +195,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               title: 'Share Portfolio',
               subtitle: 'Share to WhatsApp, Instagram, X & more',
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 Share.share(_generateShareText());
               },
             ),
@@ -207,7 +208,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               title: 'Export as PDF',
               subtitle: 'Download transaction report',
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _exportToPDF();
               },
             ),

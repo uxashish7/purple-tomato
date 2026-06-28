@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/market_data_provider.dart';
-import '../../../core/models/stock.dart';
+import '../../../domain/models/stock.dart';
 import '../../../shared/theme/app_theme.dart';
-import 'stock_search_screen.dart';
 import 'stock_detail_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_names.dart';
 
 class MarketsScreen extends ConsumerWidget {
   const MarketsScreen({super.key});
@@ -75,10 +76,7 @@ class MarketsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const StockSearchScreen()),
-              );
+              context.pushNamed(RouteNames.stockSearch);
             },
           ),
         ],
@@ -296,11 +294,9 @@ class _StockListItem extends StatelessWidget {
           exchange: 'NSE',
           instrumentType: 'EQUITY',
         );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StockDetailScreen(stock: stock),
-          ),
+        context.pushNamed(
+          RouteNames.stockDetail,
+          extra: stock,
         );
       },
       child: Container(

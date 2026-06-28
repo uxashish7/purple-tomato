@@ -6,10 +6,7 @@ import 'core/services/hive_service.dart';
 import 'core/services/supabase_service.dart';
 import 'core/utils/app_logger.dart';
 import 'shared/theme/app_theme.dart';
-import 'features/market/screens/home_screen.dart';
-import 'features/auth/screens/auth_screen.dart';
-import 'features/auth/screens/callback_screen.dart';
-import 'core/providers/upstox_auth_provider.dart';
+import 'core/router/app_router.dart';
 // Conditional import for URL checking
 import 'core/utils/url_helper_stub.dart'
     if (dart.library.html) 'core/utils/url_helper_web.dart';
@@ -53,41 +50,15 @@ class VirtualTradingApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Check if this is a callback route on web
-    final bool isCallback = kIsWeb && isCallbackRoute();
+    final goRouter = ref.watch(goRouterProvider);
     
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Purple Tomato',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
-      // Use CallbackScreen if on callback route, else AuthWrapper
-      home: isCallback ? const CallbackScreen() : const AuthWrapper(),
-      // Define named routes for navigation
-      routes: {
-        '/home': (context) => const HomeScreen(),
-        '/auth': (context) => const AuthScreen(),
-        '/callback': (context) => const CallbackScreen(),
-      },
+      routerConfig: goRouter,
     );
-  }
-}
-
-/// Wrapper that checks auth status and routes accordingly
-class AuthWrapper extends ConsumerWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(upstoxAuthProvider);
-    
-    // If authenticated, go straight to HomeScreen
-    if (authState == UpstoxAuthState.authenticated) {
-      return const HomeScreen();
-    }
-    
-    // Otherwise, show AuthScreen
-    return const AuthScreen();
   }
 }
