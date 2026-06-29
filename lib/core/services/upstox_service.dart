@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../config/api_config.dart';
-import '../models/stock.dart';
-import '../models/market_quote.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/domain/models/market_quote.dart';
 import 'hive_service.dart';
 
 /// Service for interacting with Upstox API

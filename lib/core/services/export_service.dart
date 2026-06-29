@@ -1,6 +1,6 @@
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
-import '../models/order.dart';
+import 'package:purple_tomato/domain/models/order.dart';
 import 'hive_service.dart';
 
 /// Service for exporting transaction data to CSV

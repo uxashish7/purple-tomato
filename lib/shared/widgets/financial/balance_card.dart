@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 /// Balance card widget for displaying wallet info
 class BalanceCard extends StatelessWidget {

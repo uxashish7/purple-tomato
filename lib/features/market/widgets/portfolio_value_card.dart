@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 class PortfolioValueCard extends StatefulWidget {
   final double totalValue;

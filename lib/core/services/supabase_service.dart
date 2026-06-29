@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:uuid/uuid.dart';
 import '../config/api_config.dart';
-import '../models/portfolio_snapshot.dart';
+import 'package:purple_tomato/domain/models/portfolio_snapshot.dart';
 
 /// Service for managing Supabase database and authentication
 class SupabaseService {

@@ -1,9 +1,9 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/stock.dart';
-import '../models/holding.dart';
-import '../models/order.dart';
-import '../models/wallet.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/domain/models/holding.dart';
+import 'package:purple_tomato/domain/models/order.dart';
+import 'package:purple_tomato/domain/models/wallet.dart';
 import '../config/api_config.dart';
 
 /// Service for managing Hive local storage

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/market_quote.dart';
+import 'package:purple_tomato/domain/models/market_quote.dart';
 import '../services/upstox_service.dart';
 import '../services/yahoo_finance_service.dart';
 import '../config/api_config.dart';

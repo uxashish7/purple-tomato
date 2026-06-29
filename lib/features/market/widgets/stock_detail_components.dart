@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../shared/theme/app_theme.dart';
-import '../../../domain/models/holding.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/domain/models/holding.dart';
 
 class OHLCItem extends StatelessWidget {
   final String label;

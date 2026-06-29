@@ -2,14 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/screens/auth_screen.dart';
-import '../../features/auth/screens/callback_screen.dart';
-import '../../features/auth/screens/upstox_auth_screen.dart';
-import '../../features/market/screens/home_screen.dart';
-import '../../features/market/screens/stock_detail_screen.dart';
-import '../../features/market/screens/stock_search_screen.dart';
+import 'package:purple_tomato/features/auth/screens/auth_screen.dart';
+import 'package:purple_tomato/features/auth/screens/callback_screen.dart';
+import 'package:purple_tomato/features/auth/screens/upstox_auth_screen.dart';
+import 'package:purple_tomato/features/market/screens/home_screen.dart';
+import 'package:purple_tomato/features/market/screens/stock_detail_screen.dart';
+import 'package:purple_tomato/features/market/screens/stock_search_screen.dart';
 import '../constants/route_names.dart';
-import '../models/stock.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
 import '../providers/upstox_auth_provider.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {

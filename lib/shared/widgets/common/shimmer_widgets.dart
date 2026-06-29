@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 /// Shimmer loading card widget for consistent loading UX
 class ShimmerCard extends StatelessWidget {

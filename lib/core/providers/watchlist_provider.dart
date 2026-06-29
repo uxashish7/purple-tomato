@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/stock.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
 import '../services/hive_service.dart';
 
 /// Watchlist state notifier

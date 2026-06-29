@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../shared/theme/app_theme.dart';
-import '../../../domain/models/holding.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/domain/models/holding.dart';
 import 'dart:math';
 
 class PortfolioAllocationSection extends StatelessWidget {

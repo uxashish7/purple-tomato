@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../theme/app_theme.dart';
-import '../../core/services/yahoo_finance_service.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/services/yahoo_finance_service.dart';
 
 /// TradingView-style Chart Widget using fl_chart
 /// Supports both Line and Candlestick views with proper X-axis scaling

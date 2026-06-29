@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../domain/models/stock.dart';
-import '../../../core/providers/market_data_provider.dart';
-import '../../../core/providers/watchlist_provider.dart';
-import '../../../core/providers/portfolio_provider.dart';
-import '../../../core/providers/wallet_provider.dart';
-import '../../../core/services/yahoo_finance_service.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/core/providers/market_data_provider.dart';
+import 'package:purple_tomato/core/providers/watchlist_provider.dart';
+import 'package:purple_tomato/core/providers/portfolio_provider.dart';
+import 'package:purple_tomato/core/providers/wallet_provider.dart';
+import 'package:purple_tomato/core/services/yahoo_finance_service.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import '../widgets/stock_detail_components.dart';
-import '../../../shared/widgets/charts/stock_candlestick_chart.dart';
+import 'package:purple_tomato/shared/widgets/charts/stock_candlestick_chart.dart';
 import 'package:go_router/go_router.dart';
 
 class StockDetailScreen extends ConsumerStatefulWidget {

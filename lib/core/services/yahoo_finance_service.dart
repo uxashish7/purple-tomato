@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../models/market_quote.dart';
-import '../models/stock.dart';
+import 'package:purple_tomato/domain/models/market_quote.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
 
 /// Yahoo Finance API Service for real Indian stock data
 /// Uses the unofficial Yahoo Finance API (no API key required)

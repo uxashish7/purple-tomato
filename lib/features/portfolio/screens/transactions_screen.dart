@@ -6,9 +6,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import '../../../core/services/hive_service.dart';
-import '../../../domain/models/order.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/services/hive_service.dart';
+import 'package:purple_tomato/domain/models/order.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});

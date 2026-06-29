@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/providers/market_data_provider.dart';
-import '../../../domain/models/stock.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/providers/market_data_provider.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import 'stock_detail_screen.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/route_names.dart';
+import 'package:purple_tomato/core/constants/route_names.dart';
 
 class MarketsScreen extends ConsumerWidget {
   const MarketsScreen({super.key});

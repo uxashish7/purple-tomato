@@ -2,9 +2,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/providers/upstox_auth_provider.dart';
+import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
 import '../../../core/config/api_config.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 class UpstoxAuthScreen extends ConsumerStatefulWidget {
   const UpstoxAuthScreen({super.key});

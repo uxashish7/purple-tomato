@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import '../../../core/providers/portfolio_provider.dart';
-import '../../../core/providers/wallet_provider.dart';
-import '../../../core/providers/market_data_provider.dart';
-import '../../../core/services/gemini_service.dart';
+import 'package:purple_tomato/core/providers/portfolio_provider.dart';
+import 'package:purple_tomato/core/providers/wallet_provider.dart';
+import 'package:purple_tomato/core/providers/market_data_provider.dart';
+import 'package:purple_tomato/core/services/gemini_service.dart';
 import '../../../core/config/api_config.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 /// Attachment type enum
 enum AttachmentType { none, image, pdf, url }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/providers/upstox_auth_provider.dart';
-import '../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 /// A dismissible banner shown at the top of the home screen when the app is
 /// running in demo/mock mode (no Upstox access token present).

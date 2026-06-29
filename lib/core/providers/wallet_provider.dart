@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/wallet.dart';
+import 'package:purple_tomato/domain/models/wallet.dart';
 import '../services/hive_service.dart';
 import '../config/api_config.dart';
 

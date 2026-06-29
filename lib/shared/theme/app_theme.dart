@@ -184,7 +184,7 @@ class AppTheme {
       ),
       
       // Card Theme
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: backgroundTertiary,
         elevation: 0,
         margin: const EdgeInsets.symmetric(horizontal: space4, vertical: space2),
@@ -393,7 +393,7 @@ class AppTheme {
       ),
       
       // Dialog Theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: backgroundTertiary,
         elevation: 8,
         shape: RoundedRectangleBorder(
@@ -425,14 +425,14 @@ class AppTheme {
       
       // Switch Theme
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
+        thumbColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
             return brandPrimary;
           }
           return textTertiary;
         }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
+        trackColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
             return brandPrimaryMuted;
           }
           return surfaceDefault;

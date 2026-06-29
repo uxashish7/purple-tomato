@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../core/providers/wallet_provider.dart';
-import '../../../core/providers/portfolio_provider.dart';
-import '../../../core/providers/market_data_provider.dart';
-import '../../../core/providers/upstox_auth_provider.dart';
-import '../../../core/services/hive_service.dart';
-import '../../../core/services/supabase_service.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/providers/wallet_provider.dart';
+import 'package:purple_tomato/core/providers/portfolio_provider.dart';
+import 'package:purple_tomato/core/providers/market_data_provider.dart';
+import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
+import 'package:purple_tomato/core/services/hive_service.dart';
+import 'package:purple_tomato/core/services/supabase_service.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import '../widgets/portfolio_value_card.dart';
 import '../widgets/market_index_card.dart';
 import '../widgets/portfolio_allocation_section.dart';
 import '../widgets/recent_transactions_section.dart';
 
-import '../../../shared/widgets/common/mock_mode_banner.dart';
-import '../../../shared/widgets/charts/portfolio_chart.dart';
+import 'package:purple_tomato/shared/widgets/common/mock_mode_banner.dart';
+import 'package:purple_tomato/shared/widgets/charts/portfolio_chart.dart';
 import '../../portfolio/screens/portfolio_screen.dart';
 import '../../portfolio/screens/transactions_screen.dart';
 import '../../advisor/screens/advisor_screen.dart';
@@ -23,7 +23,7 @@ import 'stock_search_screen.dart';
 import 'watchlist_screen.dart';
 import 'markets_screen.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/route_names.dart';
+import 'package:purple_tomato/core/constants/route_names.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

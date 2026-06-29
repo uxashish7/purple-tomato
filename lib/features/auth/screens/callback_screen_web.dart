@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:html' as html;
-import '../../../core/providers/upstox_auth_provider.dart';
-import '../../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import '../../market/screens/home_screen.dart';
 
 /// OAuth callback screen for WEB platform - handles Upstox redirect

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, PlatformDispatcher;
 import 'core/services/hive_service.dart';
 import 'core/services/supabase_service.dart';
 import 'core/utils/app_logger.dart';
-import 'shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 // Conditional import for URL checking
 import 'core/utils/url_helper_stub.dart'

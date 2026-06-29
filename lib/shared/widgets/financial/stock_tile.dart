@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/stock.dart';
-import '../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 import 'price_change_indicator.dart';
 
 /// Reusable stock tile widget for lists

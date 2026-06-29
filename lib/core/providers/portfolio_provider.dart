@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../models/holding.dart';
-import '../models/stock.dart';
-import '../models/order.dart';
+import 'package:purple_tomato/domain/models/holding.dart';
+import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/domain/models/order.dart';
 import '../services/hive_service.dart';
 import 'wallet_provider.dart';
 

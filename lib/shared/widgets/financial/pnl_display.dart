@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../shared/theme/app_theme.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
 
 /// Widget to display P&L with color coding
 class PnlDisplay extends StatelessWidget {

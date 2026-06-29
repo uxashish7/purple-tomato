@@ -28,7 +28,7 @@ class AppLogger {
   }
 
   /// Warning log — recoverable issues or unexpected-but-handled states.
-  static void warn(String message, {String? tag}) {
+  static void warn(String message, {String? tag, dynamic error}) {
     _log('⚠', tag, message);
   }
 

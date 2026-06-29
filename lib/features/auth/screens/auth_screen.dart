@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../shared/theme/app_theme.dart';
-import '../../../core/providers/upstox_auth_provider.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
 import '../../market/screens/home_screen.dart';
 import 'upstox_auth_screen.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/route_names.dart';
+import 'package:purple_tomato/core/constants/route_names.dart';
 // Conditional import: web uses dart:html redirect, mobile uses stub
 import 'auth_redirect_stub.dart'
     if (dart.library.html) 'auth_redirect_web.dart';

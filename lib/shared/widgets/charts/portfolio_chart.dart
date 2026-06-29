@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../theme/app_theme.dart';
-import '../../core/services/supabase_service.dart';
+import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/services/supabase_service.dart';
 
 /// Portfolio performance chart with time period selector - Modern Indian app style
 class PortfolioChart extends StatefulWidget {

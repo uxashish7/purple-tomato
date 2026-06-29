@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
-import '../config/api_config.dart';
-import '../models/holding.dart';
-import '../utils/app_logger.dart';
+import 'package:purple_tomato/core/config/api_config.dart';
+import 'package:purple_tomato/domain/models/holding.dart';
+import 'package:purple_tomato/core/utils/app_logger.dart';
 
 /// Service for interacting with Google Gemini AI
 class GeminiService {
