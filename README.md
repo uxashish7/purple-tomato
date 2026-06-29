@@ -1,16 +1,33 @@
-# virtual_trading_app
+# 🍅 Purple Tomato - Virtual Stock Trading App
 
-A new Flutter project.
+Purple Tomato is a virtual stock trading application built with Flutter. It provides users with a risk-free environment to practice trading with real-time market data.
 
-## Getting Started
+## Features
+- **Virtual Portfolio:** Start with ₹10 Lakh in virtual currency.
+- **Real-time Data:** Live streaming of market data (NSE/BSE).
+- **AI Advisor:** Get AI-powered trading advice (powered by Gemini).
+- **OAuth Integration:** Connect with Upstox for real-world trading logic (or use Guest Mode).
+- **Modern UI:** Clean, dark-mode focused UI.
 
-This project is a starting point for a Flutter application.
+## Environment Setup
 
-A few resources to get you started if this is your first Flutter project:
+1. Create a `.env` file in the root directory (use `.env.example` as a template).
+2. Add your API keys:
+```env
+UPSTOX_API_KEY=your_key
+UPSTOX_API_SECRET=your_secret
+SUPABASE_URL=your_url
+SUPABASE_ANON_KEY=your_key
+GEMINI_API_KEY=your_key
+```
+3. Run `flutter pub get` to fetch dependencies.
+4. Run `flutter run` to start the application.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Authentication Flow
+The app uses Upstox OAuth for authentication. If you prefer not to log in, you can use the "Continue as Guest" option which bypasses the Upstox requirement and uses public Yahoo Finance data.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Architecture
+- **State Management:** Riverpod
+- **Routing:** GoRouter
+- **Local Storage:** Hive
+- **Backend/DB:** Supabase
