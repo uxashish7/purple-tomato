@@ -10,6 +10,7 @@ import 'package:purple_tomato/core/providers/market_data_provider.dart';
 import 'package:purple_tomato/core/services/gemini_service.dart';
 import '../../../core/config/api_config.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
+import '../widgets/ai_insight_card.dart';
 
 /// Attachment type enum
 enum AttachmentType { none, image, pdf, url }
@@ -280,7 +281,7 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         return body;
       }
     } catch (e) {
-      print('URL fetch error: $e');
+      AppLogger.error('URL fetch error', tag: 'AdvisorScreen', error: e);
     }
     return null;
   }
@@ -394,6 +395,12 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                   _buildQuickChip('💡 Trading Tips'),
                   const SizedBox(width: 8),
                   _buildQuickChip('🔍 Stock Analysis'),
+                  const SizedBox(width: 8),
+                  _buildQuickChip('⚡ Risk Assessment'),
+                  const SizedBox(width: 8),
+                  _buildQuickChip('💻 IT Sector Insights'),
+                  const SizedBox(width: 8),
+                  _buildQuickChip('🏦 Banking Sector Insights'),
                 ],
               ),
             ),
@@ -540,55 +547,10 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
   }
 
   Widget _buildMessage(ChatMessage message) {
-    final isUser = message.isUser;
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isUser) ...[
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.psychology,
-                color: AppTheme.accentPurple,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isUser ? AppTheme.accentPurple : AppTheme.cardDark,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
-                ),
-              ),
-              child: Text(
-                message.content,
-                style: TextStyle(
-                  color: isUser ? Colors.white : AppTheme.textPrimary,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ),
-          if (isUser) const SizedBox(width: 40),
-        ],
-      ),
+    return AiInsightCard(
+      content: message.content,
+      isUser: message.isUser,
+      attachmentName: message.attachmentName,
     );
   }
 

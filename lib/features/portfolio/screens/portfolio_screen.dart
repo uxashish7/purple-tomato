@@ -268,9 +268,10 @@ class PortfolioScreen extends ConsumerWidget {
                   child: InkWell(
                     onTap: () {
                       context.pushNamed(
-                  RouteNames.stockDetail,
-                  extra: holding.stock,
-                );
+                        RouteNames.stockDetail,
+                        pathParameters: {'symbol': holding.stock.symbol},
+                        extra: holding.stock,
+                      );
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(

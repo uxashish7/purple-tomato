@@ -250,4 +250,35 @@ class SupabaseService {
       holdingsValue: holdingsValue,
     );
   }
+
+  // ============ EDGE FUNCTION GATEWAY METHODS ============
+
+  /// Invoke Supabase Edge Function to exchange Upstox OAuth code securely
+  static Future<String?> exchangeUpstoxCodeViaEdgeGateway({
+    required String code,
+    required String redirectUri,
+  }) async {
+    if (!isAvailable) {
+      debugPrint('Supabase not initialized. Skipping Edge Gateway call.');
+      return null;
+    }
+
+    try {
+      final response = await client.functions.invoke(
+        'upstox-oauth',
+        body: {
+          'code': code,
+          'redirectUri': redirectUri,
+        },
+      );
+
+      final data = response.data;
+      if (data != null && data['access_token'] != null) {
+        return data['access_token'].toString();
+      }
+    } catch (e) {
+      debugPrint('Edge Gateway Upstox OAuth exchange error: $e');
+    }
+    return null;
+  }
 }

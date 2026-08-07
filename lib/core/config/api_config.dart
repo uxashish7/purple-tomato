@@ -19,22 +19,28 @@
 class ApiConfig {
   // ============ UPSTOX CONFIGURATION ============
 
-  /// Upstox API Key (Client ID)
-  static const String upstoxApiKey = String.fromEnvironment(
+  static const String _envUpstoxApiKey = String.fromEnvironment(
     'UPSTOX_API_KEY',
     defaultValue: '',
   );
 
-  /// Upstox API Secret (Client Secret)
-  static const String upstoxApiSecret = String.fromEnvironment(
+  /// Upstox API Key (Client ID)
+  static String get upstoxApiKey =>
+      _envUpstoxApiKey.isNotEmpty ? _envUpstoxApiKey : '58977f33-cb02-4a4e-8bc4-29abca96e91c';
+
+  static const String _envUpstoxApiSecret = String.fromEnvironment(
     'UPSTOX_API_SECRET',
     defaultValue: '',
   );
 
+  /// Upstox API Secret (Client Secret)
+  static String get upstoxApiSecret =>
+      _envUpstoxApiSecret.isNotEmpty ? _envUpstoxApiSecret : 'jwvuzkfd43';
+
   /// Registered Redirect URI for OAuth callback
   static const String upstoxRedirectUri = String.fromEnvironment(
     'UPSTOX_REDIRECT_URI',
-    defaultValue: 'https://purple-tomato-lyart.vercel.app/callback',
+    defaultValue: 'http://localhost:8000/callback',
   );
 
   /// Upstox OAuth Authorization URL
@@ -50,29 +56,39 @@ class ApiConfig {
 
   // ============ GEMINI CONFIGURATION ============
 
-  /// Google AI (Gemini) API Key
-  /// Set via: flutter run --dart-define=GEMINI_API_KEY=your_key
-  static const String geminiApiKey = String.fromEnvironment(
+  static const String _envGeminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
     defaultValue: '',
   );
+
+  /// Google AI (Gemini) API Key
+  static String get geminiApiKey =>
+      _envGeminiApiKey.isNotEmpty ? _envGeminiApiKey : 'AQ.Ab8RN6IEMHsxYzO38M7BMrVmLjZYtgNc7DL6P5WxcCuMajb3_g';
 
   /// Gemini Model to use
   static const String geminiModel = 'gemini-2.5-flash';
 
   // ============ SUPABASE CONFIGURATION ============
 
-  /// Supabase project URL
-  static const String supabaseUrl = String.fromEnvironment(
+  static const String _envSupabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: '',
   );
 
-  /// Supabase anonymous/public key
-  static const String supabaseAnonKey = String.fromEnvironment(
+  /// Supabase project URL
+  static String get supabaseUrl =>
+      _envSupabaseUrl.isNotEmpty ? _envSupabaseUrl : 'https://mexdvnagumklyyrlqdax.supabase.co';
+
+  static const String _envSupabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
     defaultValue: '',
   );
+
+  /// Supabase anonymous/public key
+  static String get supabaseAnonKey =>
+      _envSupabaseAnonKey.isNotEmpty
+          ? _envSupabaseAnonKey
+          : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1leGR2bmFndW1rbHl5cmxxZGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2Njk2MTgsImV4cCI6MjA5ODI0NTYxOH0.Us0fe1Y3G694vPn2y1fL0dTltnOGW5-trLj_coZQ9uM';
 
   // ============ GOOGLE OAUTH CONFIGURATION ============
 
@@ -84,11 +100,14 @@ class ApiConfig {
 
   // ============ ALPHA VANTAGE CONFIGURATION ============
 
-  /// Alpha Vantage API Key (free at alphavantage.co)
-  static const String alphaVantageApiKey = String.fromEnvironment(
+  static const String _envAlphaVantageApiKey = String.fromEnvironment(
     'ALPHA_VANTAGE_API_KEY',
     defaultValue: '',
   );
+
+  /// Alpha Vantage API Key (free at alphavantage.co)
+  static String get alphaVantageApiKey =>
+      _envAlphaVantageApiKey.isNotEmpty ? _envAlphaVantageApiKey : '9FB6W6BIDYPVWNKO';
 
   /// Check if Alpha Vantage is configured
   static bool get isAlphaVantageConfigured => alphaVantageApiKey.isNotEmpty;

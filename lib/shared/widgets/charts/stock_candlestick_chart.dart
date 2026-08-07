@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
 import 'package:purple_tomato/core/services/yahoo_finance_service.dart';
+import 'package:purple_tomato/core/utils/app_logger.dart';
 
 /// TradingView-style Chart Widget using fl_chart
 /// Supports both Line and Candlestick views with proper X-axis scaling
@@ -71,9 +72,9 @@ class _StockCandlestickChartState extends State<StockCandlestickChart> {
         _isLoading = false;
       });
       
-      print('Chart: Loaded ${ohlcData.length} candles for ${widget.symbol}');
+      AppLogger.debug('Chart: Loaded ${ohlcData.length} candles for ${widget.symbol}', tag: 'StockCandlestickChart');
     } catch (e) {
-      print('Chart error: $e');
+      AppLogger.error('Chart error', tag: 'StockCandlestickChart', error: e);
       setState(() {
         _error = 'Failed to load chart data';
         _isLoading = false;

@@ -136,6 +136,16 @@ class AppTheme {
   static const double space10 = 40.0; // XXL
   static const double space12 = 48.0; // XXXL
   
+  // Responsive Breakpoints
+  static const double breakpointMobile = 600.0;
+  static const double breakpointTablet = 900.0;
+  static const double breakpointDesktop = 1200.0;
+
+  static bool isMobile(BuildContext context) => MediaQuery.of(context).size.width < breakpointMobile;
+  static bool isTablet(BuildContext context) =>
+      MediaQuery.of(context).size.width >= breakpointMobile && MediaQuery.of(context).size.width < breakpointDesktop;
+  static bool isDesktop(BuildContext context) => MediaQuery.of(context).size.width >= breakpointDesktop;
+
   // ╔══════════════════════════════════════════════════════════════════╗
   // ║                    BORDER RADIUS                                  ║
   // ╚══════════════════════════════════════════════════════════════════╝

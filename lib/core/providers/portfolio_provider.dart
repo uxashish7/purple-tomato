@@ -3,10 +3,12 @@ import 'package:uuid/uuid.dart';
 import 'package:purple_tomato/domain/models/holding.dart';
 import 'package:purple_tomato/domain/models/stock.dart';
 import 'package:purple_tomato/domain/models/order.dart';
+import 'package:purple_tomato/core/utils/app_logger.dart';
+import 'market_data_provider.dart';
 import '../services/hive_service.dart';
 import 'wallet_provider.dart';
 
-/// Portfolio state notifier for managing holdings
+/// Portfolio state notifier for managing holdings and pending order engine
 class PortfolioNotifier extends StateNotifier<List<Holding>> {
   final Ref _ref;
   
@@ -35,7 +37,7 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
     return holding?.quantity ?? 0;
   }
 
-  /// Execute buy order
+  /// Execute instant market buy order
   Future<bool> buyStock({
     required Stock stock,
     required int quantity,
@@ -58,11 +60,9 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
     final existingHolding = getHolding(stock.instrumentKey);
     
     if (existingHolding != null) {
-      // Average out the buy price
       existingHolding.addShares(quantity, price);
       await HiveService.saveHolding(existingHolding);
     } else {
-      // Create new holding
       final newHolding = Holding(
         id: const Uuid().v4(),
         stock: stock,
@@ -87,7 +87,7 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
     return true;
   }
 
-  /// Execute sell order
+  /// Execute instant market sell order
   Future<bool> sellStock({
     required Stock stock,
     required int quantity,
@@ -107,10 +107,8 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
     
     // Update holding
     if (holding.quantity == quantity) {
-      // Sell all - remove holding
       await HiveService.removeHolding(holding.id);
     } else {
-      // Partial sell
       holding.reduceShares(quantity);
       await HiveService.saveHolding(holding);
     }
@@ -127,6 +125,140 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
     // Refresh state
     state = HiveService.getHoldings();
     return true;
+  }
+
+  /// Place a Limit Buy Order (Executes when market price drops to targetPrice)
+  Future<bool> placeLimitBuy({
+    required Stock stock,
+    required int quantity,
+    required double targetPrice,
+  }) async {
+    final totalCost = targetPrice * quantity;
+    final walletNotifier = _ref.read(walletProvider.notifier);
+    final validationError = walletNotifier.validateBuyOrder(targetPrice, quantity);
+    
+    if (validationError != null) return false;
+    
+    // Reserve cash for limit buy
+    final deducted = await walletNotifier.deductForBuy(totalCost);
+    if (!deducted) return false;
+
+    final order = Order.limitBuy(
+      id: const Uuid().v4(),
+      stock: stock,
+      quantity: quantity,
+      targetPrice: targetPrice,
+    );
+    await HiveService.addOrder(order);
+    AppLogger.info('Placed Limit Buy Order: $order', tag: 'PortfolioNotifier');
+    return true;
+  }
+
+  /// Place a Limit Sell Order (Executes when market price rises to targetPrice)
+  Future<bool> placeLimitSell({
+    required Stock stock,
+    required int quantity,
+    required double targetPrice,
+  }) async {
+    final holding = getHolding(stock.instrumentKey);
+    if (holding == null || holding.quantity < quantity) return false;
+
+    final order = Order.limitSell(
+      id: const Uuid().v4(),
+      stock: stock,
+      quantity: quantity,
+      targetPrice: targetPrice,
+    );
+    await HiveService.addOrder(order);
+    AppLogger.info('Placed Limit Sell Order: $order', tag: 'PortfolioNotifier');
+    return true;
+  }
+
+  /// Place a Stop-Loss Order (Executes sell when price drops to triggerPrice)
+  Future<bool> placeStopLoss({
+    required Stock stock,
+    required int quantity,
+    required double triggerPrice,
+  }) async {
+    final holding = getHolding(stock.instrumentKey);
+    if (holding == null || holding.quantity < quantity) return false;
+
+    final order = Order.stopLoss(
+      id: const Uuid().v4(),
+      stock: stock,
+      quantity: quantity,
+      triggerPrice: triggerPrice,
+    );
+    await HiveService.addOrder(order);
+    AppLogger.info('Placed Stop-Loss Order: $order', tag: 'PortfolioNotifier');
+    return true;
+  }
+
+  /// Automated Matching Engine: Evaluates pending orders against live stock quotes
+  Future<void> processPendingOrders(Map<String, double> livePrices) async {
+    final allOrders = HiveService.getOrders();
+    final pendingOrders = allOrders.where((o) => o.isPending).toList();
+
+    if (pendingOrders.isEmpty) return;
+
+    for (final order in pendingOrders) {
+      final currentPrice = livePrices[order.stock.instrumentKey];
+      if (currentPrice == null || currentPrice <= 0) continue;
+
+      bool shouldExecute = false;
+
+      if (order.isLimit && order.isBuy) {
+        // Limit Buy triggers if live price drops to or below target price
+        shouldExecute = currentPrice <= (order.targetPrice ?? order.price);
+      } else if (order.isLimit && order.isSell) {
+        // Limit Sell triggers if live price rises to or above target price
+        shouldExecute = currentPrice >= (order.targetPrice ?? order.price);
+      } else if (order.isStopLoss) {
+        // Stop Loss triggers if live price falls to or below trigger price
+        shouldExecute = currentPrice <= (order.triggerPrice ?? order.price);
+      }
+
+      if (shouldExecute) {
+        AppLogger.info('Matching Engine Triggered for Order ${order.id}: ${order.stock.symbol} @ ₹$currentPrice', tag: 'PortfolioNotifier');
+        
+        if (order.isBuy) {
+          // Add shares to holding (cash was already reserved at placement)
+          final existingHolding = getHolding(order.stock.instrumentKey);
+          if (existingHolding != null) {
+            existingHolding.addShares(order.quantity, currentPrice);
+            await HiveService.saveHolding(existingHolding);
+          } else {
+            final newHolding = Holding(
+              id: const Uuid().v4(),
+              stock: order.stock,
+              quantity: order.quantity,
+              avgBuyPrice: currentPrice,
+              purchaseDate: DateTime.now(),
+            );
+            await HiveService.saveHolding(newHolding);
+          }
+        } else {
+          // Sell order: Credit wallet and update holding
+          final walletNotifier = _ref.read(walletProvider.notifier);
+          await walletNotifier.creditFromSell(currentPrice * order.quantity);
+
+          final holding = getHolding(order.stock.instrumentKey);
+          if (holding != null) {
+            if (holding.quantity <= order.quantity) {
+              await HiveService.removeHolding(holding.id);
+            } else {
+              holding.reduceShares(order.quantity);
+              await HiveService.saveHolding(holding);
+            }
+          }
+        }
+
+        // Mark order executed
+        final updatedOrder = order.copyWith(statusIndex: 0, price: currentPrice);
+        await HiveService.addOrder(updatedOrder);
+        state = HiveService.getHoldings();
+      }
+    }
   }
 
   /// Calculate total invested value
@@ -168,12 +300,16 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
 
 /// Provider for portfolio state
 final portfolioProvider = StateNotifierProvider<PortfolioNotifier, List<Holding>>((ref) {
-  return PortfolioNotifier(ref);
+  final notifier = PortfolioNotifier(ref);
+  // Listen to live prices to continuously evaluate pending orders
+  ref.listen<Map<String, double>>(livePricesProvider, (_, livePrices) {
+    notifier.processPendingOrders(livePrices);
+  });
+  return notifier;
 });
 
 /// Provider for orders history
 final ordersProvider = Provider<List<Order>>((ref) {
-  // Watch portfolio changes to trigger order refresh
   ref.watch(portfolioProvider);
   return HiveService.getOrders();
 });

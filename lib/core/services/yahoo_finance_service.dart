@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:purple_tomato/domain/models/market_quote.dart';
 import 'package:purple_tomato/domain/models/stock.dart';
+import 'package:purple_tomato/core/utils/app_logger.dart';
 
 /// Yahoo Finance API Service for real Indian stock data
 /// Uses the unofficial Yahoo Finance API (no API key required)
@@ -67,13 +68,13 @@ class YahooFinanceService {
       
       // Return mock if API fails
       if (results.isEmpty) {
-        print('Yahoo Finance: No results, returning mock data');
+        AppLogger.debug('Yahoo Finance: No results, returning mock data', tag: 'YahooFinanceService');
         return _getMockIndices();
       }
       
       return results;
     } catch (e) {
-      print('Yahoo Finance indices error: $e');
+      AppLogger.error('Yahoo Finance indices error', tag: 'YahooFinanceService', error: e);
       // Try next proxy on error
       if (_currentProxyIndex < _corsProxies.length - 1) {
         _currentProxyIndex++;
@@ -114,7 +115,7 @@ class YahooFinanceService {
         'previousClose': previousClose,
       };
     } catch (e) {
-      print('Yahoo Finance quote error for $symbol: $e');
+      AppLogger.error('Yahoo Finance quote error for $symbol', tag: 'YahooFinanceService', error: e);
       return null;
     }
   }
@@ -155,7 +156,7 @@ class YahooFinanceService {
             );
           }).toList();
     } catch (e) {
-      print('Yahoo Finance search error: $e');
+      AppLogger.error('Yahoo Finance search error', tag: 'YahooFinanceService', error: e);
       return [];
     }
   }
@@ -180,7 +181,7 @@ class YahooFinanceService {
         close: quote['previousClose']?.toDouble() ?? 0,
       );
     } catch (e) {
-      print('Yahoo Finance stock quote error: $e');
+      AppLogger.error('Yahoo Finance stock quote error', tag: 'YahooFinanceService', error: e);
       return null;
     }
   }
@@ -279,7 +280,7 @@ class YahooFinanceService {
       
       return ohlcList.isNotEmpty ? ohlcList : _getMockOHLC();
     } catch (e) {
-      print('Yahoo Finance OHLC error: $e');
+      AppLogger.error('Yahoo Finance OHLC error', tag: 'YahooFinanceService', error: e);
       return _getMockOHLC();
     }
   }

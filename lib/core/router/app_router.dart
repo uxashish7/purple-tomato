@@ -52,10 +52,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CallbackScreen(),
       ),
       GoRoute(
-        path: '/stock',
+        path: '/stock/:symbol',
         name: RouteNames.stockDetail,
         builder: (context, state) {
-          final stock = state.extra as Stock;
+          final symbol = state.pathParameters['symbol'] ?? 'RELIANCE';
+          final stock = (state.extra as Stock?) ??
+              Stock(
+                instrumentKey: 'NSE_EQ|$symbol',
+                symbol: symbol,
+                name: symbol,
+                exchange: 'NSE',
+                instrumentType: 'EQUITY',
+              );
           return StockDetailScreen(stock: stock);
         },
       ),

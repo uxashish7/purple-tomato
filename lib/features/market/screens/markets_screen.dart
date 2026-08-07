@@ -296,6 +296,7 @@ class _StockListItem extends StatelessWidget {
         );
         context.pushNamed(
           RouteNames.stockDetail,
+          pathParameters: {'symbol': symbol},
           extra: stock,
         );
       },

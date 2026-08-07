@@ -129,9 +129,10 @@ class WatchlistScreen extends ConsumerWidget {
             changePercent: quote?.changePercent,
             onTap: () {
               context.pushNamed(
-                  RouteNames.stockDetail,
-                  extra: stock,
-                );
+                RouteNames.stockDetail,
+                pathParameters: {'symbol': stock.symbol},
+                extra: stock,
+              );
             },
           ),
         );

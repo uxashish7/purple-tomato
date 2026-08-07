@@ -256,12 +256,16 @@ class _HomeContent extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(indexQuotesProvider);
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // Demo mode banner — visible only when running without live data
               const MockModeBanner(),
 
@@ -399,8 +403,9 @@ class _HomeContent extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // Portfolio Value Card with summary stats - Modern Glassmorphism Design

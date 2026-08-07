@@ -8,6 +8,7 @@ import 'package:purple_tomato/core/providers/wallet_provider.dart';
 import 'package:purple_tomato/core/services/yahoo_finance_service.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
 import '../widgets/stock_detail_components.dart';
+import '../widgets/trade_execution_sheet.dart';
 import 'package:purple_tomato/shared/widgets/charts/stock_candlestick_chart.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,10 +22,6 @@ class StockDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
-  bool _isBuyMode = true;
-  int _quantity = 1;
-  String _orderType = 'Market'; // Market, Limit, SL
-  
   // Price fetching state
   final YahooFinanceService _yahooService = YahooFinanceService();
   double? _fetchedPrice;
@@ -62,7 +59,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
         setState(() => _isPriceFetching = false);
       }
     } catch (e) {
-      print('Price fetch error: $e');
       setState(() => _isPriceFetching = false);
     }
   }
@@ -73,7 +69,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
     final quote = quotes[widget.stock.instrumentKey];
     final isInWatchlist = ref.watch(isInWatchlistProvider(widget.stock.instrumentKey));
     final holding = ref.read(portfolioProvider.notifier).getHolding(widget.stock.instrumentKey);
-    final wallet = ref.watch(walletProvider);
     
     // Use fetched price first, then live quote, then fallback
     final livePrice = _fetchedPrice ?? quote?.lastPrice ?? 1500.0;
@@ -174,7 +169,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
             
             const SizedBox(height: 24),
             
-            // Price Display - Properly Aligned
+            // Price Display
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -251,7 +246,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
               ),
             ),
             
-            // Current Holding - Glassmorphism Design
+            // Current Holding
             if (holding != null) ...[
               const SizedBox(height: 16),
               Container(
@@ -270,13 +265,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                     color: AppTheme.accentPurple.withOpacity(0.3),
                     width: 1.5,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accentPurple.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,7 +280,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                                 color: AppTheme.accentPurple.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.account_balance_wallet,
                                 color: AppTheme.accentPurple,
                                 size: 18,
@@ -309,7 +297,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                             ),
                           ],
                         ),
-                        // Current Value with P&L
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -374,295 +361,12 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
             
             const SizedBox(height: 24),
             
-            // Order Panel
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardDark,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  // Buy/Sell Toggle
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _isBuyMode = true),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: _isBuyMode 
-                                  ? AppTheme.profitGreen 
-                                  : AppTheme.cardElevated,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'BUY',
-                                style: TextStyle(
-                                  color: _isBuyMode 
-                                      ? Colors.white 
-                                      : AppTheme.textMuted,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (holding == null || holding.quantity == 0) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('You don\'t own this stock. Buy first to sell.'),
-                                  backgroundColor: AppTheme.warningOrange,
-                                ),
-                              );
-                              return;
-                            }
-                            setState(() => _isBuyMode = false);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: (holding == null || holding.quantity == 0)
-                                  ? AppTheme.surfaceDisabled
-                                  : (!_isBuyMode 
-                                      ? AppTheme.lossRed 
-                                      : AppTheme.cardElevated),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'SELL',
-                                    style: TextStyle(
-                                      color: (holding == null || holding.quantity == 0)
-                                          ? AppTheme.textDisabled
-                                          : (!_isBuyMode 
-                                              ? Colors.white 
-                                              : AppTheme.textMuted),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  if (holding == null || holding.quantity == 0) ...[
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.lock_outline,
-                                      size: 14,
-                                      color: AppTheme.textDisabled,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Quantity
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quantity',
-                        style: TextStyle(
-                          color: AppTheme.textMuted,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          QuantityButton(
-                            icon: Icons.remove,
-                            onTap: () {
-                              if (_quantity > 1) {
-                                setState(() => _quantity--);
-                              }
-                            },
-                          ),
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 12),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AppTheme.cardElevated,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '$_quantity',
-                                  style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          QuantityButton(
-                            icon: Icons.add,
-                            onTap: () => setState(() => _quantity++),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Order Type
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Order Type',
-                        style: TextStyle(
-                          color: AppTheme.textMuted,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _buildOrderTypeChip('Market'),
-                          const SizedBox(width: 8),
-                          _buildOrderTypeChip('Limit'),
-                          const SizedBox(width: 8),
-                          _buildOrderTypeChip('SL'),
-                        ],
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Price & Total
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundDark,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Price', style: TextStyle(color: AppTheme.textMuted)),
-                            Text(
-                              '₹${livePrice.toStringAsFixed(2)}',
-                              style: const TextStyle(color: AppTheme.textPrimary),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Quantity', style: TextStyle(color: AppTheme.textMuted)),
-                            Text(
-                              '$_quantity',
-                              style: const TextStyle(color: AppTheme.textPrimary),
-                            ),
-                          ],
-                        ),
-                        const Divider(color: AppTheme.cardElevated, height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Total',
-                              style: TextStyle(
-                                color: AppTheme.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '₹${(livePrice * _quantity).toStringAsFixed(2)}',
-                              style: TextStyle(
-                                color: _isBuyMode ? AppTheme.profitGreen : AppTheme.lossRed,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_isBuyMode) {
-                          _executeBuy(context, _quantity, livePrice);
-                        } else {
-                          // Sell mode
-                          if (holding == null || holding.quantity == 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('You don\'t own this stock. Buy first to sell.'),
-                                backgroundColor: AppTheme.warningOrange,
-                              ),
-                            );
-                            return;
-                          }
-                          if (holding.quantity < _quantity) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Insufficient shares. You only have ${holding.quantity} shares.'),
-                                backgroundColor: AppTheme.warningOrange,
-                              ),
-                            );
-                            return;
-                          }
-                          _executeSell(context, _quantity, livePrice);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isBuyMode 
-                            ? AppTheme.profitGreen 
-                            : (holding != null && holding.quantity >= _quantity
-                                ? AppTheme.lossRed
-                                : AppTheme.surfaceDisabled),
-                        foregroundColor: _isBuyMode || (holding != null && holding.quantity >= _quantity)
-                            ? Colors.white
-                            : AppTheme.textDisabled,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        '${_isBuyMode ? 'BUY' : 'SELL'} ${widget.stock.symbol}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            // Extracted Order Trade Execution Sheet
+            TradeExecutionSheet(
+              stock: widget.stock,
+              livePrice: livePrice,
+              holding: holding,
+              onTradeExecuted: () => setState(() {}),
             ),
             
             const SizedBox(height: 32),
@@ -671,101 +375,4 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
       ),
     );
   }
-
-  Widget _buildOrderTypeChip(String label) {
-    final isSelected = _orderType == label;
-    return GestureDetector(
-      onTap: () {
-        if (label != 'Market') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$label orders coming soon! Only Market orders available now.'),
-              backgroundColor: AppTheme.infoDefault,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          return;
-        }
-        setState(() => _orderType = label);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentBlue : AppTheme.cardElevated,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppTheme.accentBlue : AppTheme.borderDefault,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppTheme.textMuted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _executeBuy(BuildContext context, int quantity, double price) async {
-    final balance = ref.read(walletProvider).balance;
-    final totalCost = price * quantity;
-    
-    if (balance < totalCost) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Insufficient funds'),
-          backgroundColor: AppTheme.lossRed,
-        ),
-      );
-      return;
-    }
-    
-    final success = await ref.read(portfolioProvider.notifier).buyStock(
-      stock: widget.stock,
-      quantity: quantity,
-      price: price,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Bought $quantity ${widget.stock.symbol} @ ₹${price.toStringAsFixed(2)}'
-              : 'Failed to execute buy order',
-        ),
-        backgroundColor: success ? AppTheme.profitGreen : AppTheme.lossRed,
-      ),
-    );
-
-    if (success) {
-      setState(() {});
-    }
-  }
-
-  void _executeSell(BuildContext context, int quantity, double price) async {
-    final success = await ref.read(portfolioProvider.notifier).sellStock(
-      stock: widget.stock,
-      quantity: quantity,
-      price: price,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Sold $quantity ${widget.stock.symbol} @ ₹${price.toStringAsFixed(2)}'
-              : 'Failed to execute sell order',
-        ),
-        backgroundColor: success ? AppTheme.profitGreen : AppTheme.lossRed,
-      ),
-    );
-
-    if (success) {
-      setState(() {});
-    }
-  }
 }
-

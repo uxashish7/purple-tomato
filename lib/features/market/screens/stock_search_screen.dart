@@ -196,6 +196,7 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
             );
             context.pushNamed(
               RouteNames.stockDetail,
+              pathParameters: {'symbol': mockStock.symbol},
               extra: mockStock,
             );
           },
@@ -224,6 +225,7 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
               onTap: () {
                 context.pushNamed(
                   RouteNames.stockDetail,
+                  pathParameters: {'symbol': stock.symbol},
                   extra: stock,
                 );
               },

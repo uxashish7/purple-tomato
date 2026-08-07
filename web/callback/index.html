@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecting to Upstox...</title>
+  <script>
+    // Forward authorization code and parameters to Flutter Web app
+    (function() {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      if (search && search.includes('code=')) {
+        window.location.href = '/#' + '/callback' + search;
+      } else {
+        window.location.href = '/#/';
+      }
+    })();
+  </script>
+</head>
+<body style="background: #0D0E15; color: #FFFFFF; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+  <div style="text-align: center;">
+    <h2 style="margin-bottom: 8px;">Completing Upstox Authentication...</h2>
+    <p style="color: #A0A5B5; font-size: 14px;">Redirecting you back to Purple Tomato.</p>
+  </div>
+</body>
+</html>

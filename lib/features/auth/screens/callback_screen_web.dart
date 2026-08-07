@@ -26,12 +26,19 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
 
   Future<void> _handleCallback() async {
     try {
-      // Get the current URL (web-only)
-      final uri = Uri.parse(html.window.location.href);
+      final fullUrl = html.window.location.href;
+      final fullUri = Uri.parse(fullUrl);
       
-      // Extract the authorization code from URL parameters
-      final code = uri.queryParameters['code'];
-      final error = uri.queryParameters['error'];
+      String? code = fullUri.queryParameters['code'];
+      String? error = fullUri.queryParameters['error'];
+
+      // Fallback: check query parameters if attached after hash fragment (#/callback?code=xyz)
+      if ((code == null || code.isEmpty) && fullUrl.contains('?')) {
+        final queryPart = fullUrl.substring(fullUrl.indexOf('?'));
+        final dummyUri = Uri.parse('http://localhost$queryPart');
+        code ??= dummyUri.queryParameters['code'];
+        error ??= dummyUri.queryParameters['error'];
+      }
       
       if (error != null) {
         setState(() {

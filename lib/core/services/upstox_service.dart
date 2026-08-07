@@ -4,6 +4,7 @@ import '../config/api_config.dart';
 import 'package:purple_tomato/domain/models/stock.dart';
 import 'package:purple_tomato/domain/models/market_quote.dart';
 import 'hive_service.dart';
+import 'supabase_service.dart';
 
 /// Service for interacting with Upstox API
 class UpstoxService {
@@ -48,6 +49,19 @@ class UpstoxService {
   /// Exchange authorization code for access token
   Future<String?> exchangeCodeForToken(String code) async {
     try {
+      // 1. Try Supabase Edge Function Gateway first to avoid exposing client secret in web JS bundles
+      if (SupabaseService.isAvailable) {
+        final token = await SupabaseService.exchangeUpstoxCodeViaEdgeGateway(
+          code: code,
+          redirectUri: ApiConfig.upstoxRedirectUri,
+        );
+        if (token != null && token.isNotEmpty) {
+          await HiveService.saveAccessToken(token);
+          return token;
+        }
+      }
+
+      // 2. Direct fallback (for local mobile dev)
       final response = await _dio.post(
         '/login/authorization/token',
         options: Options(
