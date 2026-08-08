@@ -300,12 +300,15 @@ class PortfolioNotifier extends StateNotifier<List<Holding>> {
 
 /// Provider for portfolio state
 final portfolioProvider = StateNotifierProvider<PortfolioNotifier, List<Holding>>((ref) {
-  final notifier = PortfolioNotifier(ref);
-  // Listen to live prices to continuously evaluate pending orders
-  ref.listen<Map<String, double>>(livePricesProvider, (_, livePrices) {
-    notifier.processPendingOrders(livePrices);
-  });
-  return notifier;
+  return PortfolioNotifier(ref);
+});
+
+/// Order matching trigger provider (runs order evaluation when live prices update without circular dependency)
+final orderMatchingProvider = Provider<void>((ref) {
+  final livePrices = ref.watch(livePricesProvider);
+  if (livePrices.isNotEmpty) {
+    ref.read(portfolioProvider.notifier).processPendingOrders(livePrices);
+  }
 });
 
 /// Provider for orders history

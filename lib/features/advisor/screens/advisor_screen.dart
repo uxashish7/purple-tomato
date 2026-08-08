@@ -10,6 +10,7 @@ import 'package:purple_tomato/core/providers/market_data_provider.dart';
 import 'package:purple_tomato/core/services/gemini_service.dart';
 import '../../../core/config/api_config.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
+import 'package:purple_tomato/core/utils/app_logger.dart';
 import '../widgets/ai_insight_card.dart';
 
 /// Attachment type enum

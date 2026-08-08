@@ -12,12 +12,27 @@ import 'auth_redirect_stub.dart'
     if (dart.library.html) 'auth_redirect_web.dart';
 
 
+import 'package:purple_tomato/core/config/api_config.dart';
+
 /// Authentication screen with Upstox OAuth and Guest mode
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
 
   /// Handle Upstox login with platform-specific behavior
   Future<void> _handleUpstoxLogin(BuildContext context, WidgetRef ref) async {
+    if (!ApiConfig.isUpstoxConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Upstox API Key is not configured for this build. Please use Guest Mode or set UPSTOX_API_KEY environment variable.',
+          ),
+          backgroundColor: AppTheme.lossRed,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
     final authUrl = ref.read(upstoxAuthProvider.notifier).getAuthorizationUrl();
     
     if (kIsWeb) {

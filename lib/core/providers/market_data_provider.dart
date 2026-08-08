@@ -55,7 +55,7 @@ final liveQuotesProvider = StateNotifierProvider<LiveQuotesNotifier, Map<String,
 
   final watchlistKeys = watchlist.map((s) => s.instrumentKey).toSet();
   final holdingKeys = holdings.map((h) => h.stock.instrumentKey).toSet();
-  final allKeys = {...watchlistKeys, ...holdingKeys};
+  final allKeys = <String>{...watchlistKeys, ...holdingKeys};
 
   return LiveQuotesNotifier(service, allKeys);
 });
