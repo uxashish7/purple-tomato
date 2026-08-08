@@ -32,9 +32,10 @@ class ApiConfig {
   );
 
   /// Registered Redirect URI for OAuth callback
+  /// NOTE: Default is the production Vercel URL. Override with UPSTOX_REDIRECT_URI env var for local dev.
   static const String upstoxRedirectUri = String.fromEnvironment(
     'UPSTOX_REDIRECT_URI',
-    defaultValue: 'http://localhost:8000/callback',
+    defaultValue: 'https://purple-tomato-lyart.vercel.app/callback',
   );
 
   /// Upstox OAuth Authorization URL
