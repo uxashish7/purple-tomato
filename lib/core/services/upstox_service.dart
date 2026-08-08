@@ -17,9 +17,9 @@ class UpstoxService {
     
     // Add interceptor for auth token
     _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token = HiveService.getAccessToken();
-        if (token != null) {
+      onRequest: (options, handler) async {
+        final token = await HiveService.getAccessToken();
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         options.headers['Accept'] = 'application/json';
@@ -28,6 +28,7 @@ class UpstoxService {
       onError: (error, handler) {
         // Handle 401 - Token expired
         if (error.response?.statusCode == 401) {
+          debugPrint('UpstoxService: 401 Unauthorized - clearing token');
           HiveService.clearAccessToken();
         }
         handler.next(error);
