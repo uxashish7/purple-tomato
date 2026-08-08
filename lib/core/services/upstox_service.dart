@@ -48,28 +48,54 @@ class UpstoxService {
 
   /// Exchange authorization code for access token
   Future<String?> exchangeCodeForToken(String code) async {
-    try {
-      debugPrint('UpstoxService: Exchanging code via Edge Function (redirectUri: ${ApiConfig.upstoxRedirectUri})...');
-      // 1. Try Supabase Edge Function Gateway first to avoid exposing client secret in web JS bundles
-      if (SupabaseService.isAvailable) {
+    debugPrint('UpstoxService: Starting token exchange...');
+    debugPrint('UpstoxService: redirect_uri = ${ApiConfig.upstoxRedirectUri}');
+
+    // ── Path 1: Supabase Edge Function (preferred — keeps secrets server-side) ──
+    if (SupabaseService.isAvailable) {
+      debugPrint('UpstoxService: Trying Supabase Edge Function...');
+      try {
         final token = await SupabaseService.exchangeUpstoxCodeViaEdgeGateway(
           code: code,
           redirectUri: ApiConfig.upstoxRedirectUri,
         );
         if (token != null && token.isNotEmpty) {
+          debugPrint('UpstoxService: Edge Function succeeded ✅');
           await HiveService.saveAccessToken(token);
           return token;
         }
+        debugPrint('UpstoxService: Edge Function returned null — falling back');
+      } catch (e) {
+        debugPrint('UpstoxService: Edge Function error: $e — falling back');
       }
+    } else {
+      debugPrint('UpstoxService: Supabase not available — skipping Edge Function');
+    }
 
-      debugPrint('UpstoxService: Falling back to server proxy token exchange...');
-      // 2. Direct fallback (use Vercel serverless proxy on Web to bypass browser CORS)
-      final tokenEndpoint = kIsWeb
-          ? '/api/upstox-token'
-          : 'https://api.upstox.com/v2/login/authorization/token';
+    // ── Path 2: Server-side proxy (Web) or direct API call (native) ──
+    // IMPORTANT: We use a fresh Dio WITHOUT baseUrl here.
+    // The main _dio instance has baseUrl = 'https://api.upstox.com/v2',
+    // which would corrupt relative paths like '/api/upstox-token'.
+    final String tokenUrl;
+    if (kIsWeb) {
+      // Uri.base.origin gives us the current Vercel deployment origin dynamically.
+      // Works for both production (purple-tomato-lyart.vercel.app)
+      // and feature branch previews (purple-tomato-xyz.vercel.app).
+      final origin = Uri.base.origin;
+      tokenUrl = '$origin/api/upstox-token';
+      debugPrint('UpstoxService: Using Vercel proxy: $tokenUrl');
+    } else {
+      tokenUrl = ApiConfig.upstoxTokenUrl;
+      debugPrint('UpstoxService: Using direct Upstox API: $tokenUrl');
+    }
 
-      final response = await _dio.post(
-        tokenEndpoint,
+    try {
+      final tokenDio = Dio()
+        ..options.connectTimeout = const Duration(seconds: 30)
+        ..options.receiveTimeout = const Duration(seconds: 30);
+
+      final response = await tokenDio.post(
+        tokenUrl,
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           validateStatus: (status) => true,
@@ -83,31 +109,33 @@ class UpstoxService {
         },
       );
 
-      debugPrint('UpstoxService: Direct exchange status: ${response.statusCode}');
+      debugPrint('UpstoxService: Response status: ${response.statusCode}');
+      debugPrint('UpstoxService: Response body: ${response.data}');
 
-      if (response.statusCode == 200 && response.data != null && response.data['access_token'] != null) {
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data['access_token'] != null) {
         final token = response.data['access_token'] as String;
         await HiveService.saveAccessToken(token);
+        debugPrint('UpstoxService: Token exchange succeeded ✅');
         return token;
       }
 
-      if (response.data != null) {
-        debugPrint('Upstox error response: ${response.data}');
-        if (response.data is Map && response.data['errors'] != null && (response.data['errors'] as List).isNotEmpty) {
-          final firstError = response.data['errors'][0];
-          final msg = firstError['message'] ?? firstError['error_code'] ?? 'Exchange failed';
-          throw Exception('Upstox API Error: $msg');
+      // Extract a meaningful error message from Upstox response
+      String errorDetail = 'HTTP ${response.statusCode}';
+      if (response.data is Map) {
+        if (response.data['errors'] is List && (response.data['errors'] as List).isNotEmpty) {
+          final e = response.data['errors'][0];
+          errorDetail = '${e['error_code'] ?? ''}: ${e['message'] ?? ''}';
+        } else if (response.data['error'] != null) {
+          errorDetail = response.data['error'].toString();
+        } else if (response.data['message'] != null) {
+          errorDetail = response.data['message'].toString();
         }
       }
-
-      throw Exception('Server returned status ${response.statusCode}');
+      throw Exception('Token exchange failed — $errorDetail');
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      debugPrint('UpstoxService: Token exchange DioException status=$status response=${e.response?.data}');
-      rethrow;
-    } catch (e) {
-      debugPrint('UpstoxService: Token exchange error: $e');
-      rethrow;
+      throw Exception('Network error: ${e.message} (type: ${e.type})');
     }
   }
 

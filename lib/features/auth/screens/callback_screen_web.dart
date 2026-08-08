@@ -66,11 +66,8 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
           .handleAuthCallback(code);
 
       if (success) {
-        // Wait a moment for user to see success message
         await Future.delayed(const Duration(seconds: 2));
-        
         if (mounted) {
-          // Navigate to home screen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
@@ -78,13 +75,13 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
       } else {
         final detailedError = ref.read(upstoxAuthProvider.notifier).errorMessage;
         setState(() {
-          _error = detailedError ?? 'Failed to exchange authorization code';
+          _error = detailedError ?? 'Token exchange returned null (no error details)';
           _isProcessing = false;
         });
       }
     } catch (e) {
       setState(() {
-        _error = 'Error processing callback: $e';
+        _error = 'Callback error: $e';
         _isProcessing = false;
       });
     }
