@@ -19,8 +19,24 @@ final yahooFinanceServiceProvider = Provider<YahooFinanceService>((ref) {
 });
 
 /// Provider for index quotes (Nifty 50, Sensex)
-/// Uses Yahoo Finance with mock fallback for reliability.
+/// Prioritizes Upstox API when authenticated, with Yahoo Finance and mock fallback.
 final indexQuotesProvider = FutureProvider<List<IndexQuote>>((ref) async {
+  final upstoxService = ref.watch(upstoxServiceProvider);
+
+  // If authenticated with Upstox, fetch real live index data from Upstox
+  if (await upstoxService.isAuthenticated) {
+    try {
+      final upstoxQuotes = await upstoxService.getIndexQuotes();
+      if (upstoxQuotes.isNotEmpty && upstoxQuotes.any((q) => q.value > 0)) {
+        AppLogger.info('Using Upstox API for live index data', tag: 'MarketData');
+        return upstoxQuotes;
+      }
+    } catch (e) {
+      AppLogger.warn('Upstox getIndexQuotes failed, trying Yahoo Finance', tag: 'MarketData', error: e);
+    }
+  }
+
+  // Fallback to Yahoo Finance / Mock data
   final mockData = [
     IndexQuote.mock(name: 'NIFTY 50', instrumentKey: '^NSEI', value: 26178.70, change: 146.55, changePercent: 0.56),
     IndexQuote.mock(name: 'SENSEX', instrumentKey: '^BSESN', value: 85063.34, change: 478.29, changePercent: 0.57),

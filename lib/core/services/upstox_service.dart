@@ -245,27 +245,30 @@ class UpstoxService {
         final Map<String, dynamic> data = response.data['data'];
         final List<IndexQuote> quotes = [];
 
-        if (data.containsKey(ApiConfig.nifty50Key)) {
-          quotes.add(IndexQuote.fromUpstoxJson(
-            'NIFTY 50',
-            ApiConfig.nifty50Key,
-            data[ApiConfig.nifty50Key],
-          ));
-        }
+        data.forEach((key, value) {
+          final upperKey = key.toUpperCase();
+          if (upperKey.contains('NIFTY') && !quotes.any((q) => q.name == 'NIFTY 50')) {
+            quotes.add(IndexQuote.fromUpstoxJson(
+              'NIFTY 50',
+              ApiConfig.nifty50Key,
+              value is Map<String, dynamic> ? value : {},
+            ));
+          } else if (upperKey.contains('SENSEX') && !quotes.any((q) => q.name == 'SENSEX')) {
+            quotes.add(IndexQuote.fromUpstoxJson(
+              'SENSEX',
+              ApiConfig.sensexKey,
+              value is Map<String, dynamic> ? value : {},
+            ));
+          }
+        });
 
-        if (data.containsKey(ApiConfig.sensexKey)) {
-          quotes.add(IndexQuote.fromUpstoxJson(
-            'SENSEX',
-            ApiConfig.sensexKey,
-            data[ApiConfig.sensexKey],
-          ));
+        if (quotes.isNotEmpty) {
+          return quotes;
         }
-
-        return quotes;
       }
       return _getMockIndexQuotes();
     } catch (e) {
-      debugPrint('UpstoxService: getIndexQuotes error: ${e.runtimeType}');
+      debugPrint('UpstoxService: getIndexQuotes error: $e');
       return _getMockIndexQuotes();
     }
   }
