@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "=== Installing Flutter SDK ==="
-git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter-sdk
+echo "=== Installing Flutter SDK (3.19.6) ==="
+git clone https://github.com/flutter/flutter.git -b 3.19.6 --depth 1 flutter-sdk
 export PATH="$PATH:$PWD/flutter-sdk/bin"
 
 echo "=== Flutter Version ==="
