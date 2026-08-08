@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:html' as html;
 import 'package:purple_tomato/core/providers/upstox_auth_provider.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
@@ -17,6 +18,7 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
   bool _isProcessing = true;
   String? _error;
   String? _code;
+  bool _hasStartedProcessing = false;
 
   @override
   void initState() {
@@ -25,6 +27,9 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
   }
 
   Future<void> _handleCallback() async {
+    if (_hasStartedProcessing) return;
+    _hasStartedProcessing = true;
+
     try {
       final fullUrl = html.window.location.href;
       final fullUri = Uri.parse(fullUrl);
@@ -66,11 +71,9 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
           .handleAuthCallback(code);
 
       if (success) {
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
-          );
+          context.go('/');
         }
       } else {
         final detailedError = ref.read(upstoxAuthProvider.notifier).errorMessage;

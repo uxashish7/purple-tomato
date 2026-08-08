@@ -12,20 +12,47 @@ import '../constants/route_names.dart';
 import 'package:purple_tomato/domain/models/stock.dart';
 import '../providers/upstox_auth_provider.dart';
 
+/// Notifier to refresh GoRouter without re-creating the GoRouter instance
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<UpstoxAuthState>(
+      upstoxAuthProvider,
+      (_, __) => notifyListeners(),
+    );
+    _ref.listen<bool>(
+      isGuestModeProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(upstoxAuthProvider);
-  final isGuestMode = ref.watch(isGuestModeProvider);
+  final notifier = ref.read(routerNotifierProvider);
   
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: notifier,
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      final authState = ref.read(upstoxAuthProvider);
+      final isGuestMode = ref.read(isGuestModeProvider);
+
       final isAuth = authState == UpstoxAuthState.authenticated || isGuestMode;
       final isAuthScreen = state.uri.path == '/auth';
       final isCallbackScreen = state.uri.path.startsWith('/callback');
 
-      // Allow callback to process regardless of current auth state
-      if (isCallbackScreen) return null;
+      // Allow callback to process regardless of current auth state.
+      // If user is authenticated while on callback, redirect to home.
+      if (isCallbackScreen) {
+        if (isAuth) return '/';
+        return null;
+      }
 
       // If not authenticated and not already on auth screen, redirect to auth
       if (!isAuth && !isAuthScreen) return '/auth';
