@@ -22,30 +22,43 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
 
   // Popular stocks for display when no search query
   final List<Map<String, dynamic>> _popularStocks = [
-    {'symbol': 'RELIANCE', 'name': 'Reliance Industries', 'price': 2427.79, 'change': -0.91},
-    {'symbol': 'TCS', 'name': 'Tata Consultancy Services', 'price': 3860.71, 'change': 0.28},
-    {'symbol': 'HDFCBANK', 'name': 'HDFC Bank', 'price': 1654.90, 'change': 0.30},
-    {'symbol': 'INFY', 'name': 'Infosys', 'price': 1498.06, 'change': -1.44},
-    {'symbol': 'ICICIBANK', 'name': 'ICICI Bank', 'price': 1175.02, 'change': -0.42},
+    {'symbol': 'RELIANCE', 'name': 'Reliance Industries', 'key': 'NSE_EQ|INE002A01018', 'price': 2427.79, 'change': -0.91},
+    {'symbol': 'TCS', 'name': 'Tata Consultancy Services', 'key': 'NSE_EQ|INE467B01029', 'price': 3860.71, 'change': 0.28},
+    {'symbol': 'HDFCBANK', 'name': 'HDFC Bank', 'key': 'NSE_EQ|INE040A01034', 'price': 1654.90, 'change': 0.30},
+    {'symbol': 'INFY', 'name': 'Infosys', 'key': 'NSE_EQ|INE009A01021', 'price': 1498.06, 'change': -1.44},
+    {'symbol': 'ICICIBANK', 'name': 'ICICI Bank', 'key': 'NSE_EQ|INE090A01021', 'price': 1175.02, 'change': -0.42},
   ];
 
   // Top Gainers
   final List<Map<String, dynamic>> _topGainers = [
-    {'symbol': 'SBIN', 'name': 'State Bank of India', 'price': 790.28, 'change': 2.85},
-    {'symbol': 'BHARTIARTL', 'name': 'Bharti Airtel', 'price': 1580.45, 'change': 2.12},
-    {'symbol': 'TATAMOTORS', 'name': 'Tata Motors', 'price': 785.60, 'change': 1.95},
-    {'symbol': 'ADANIENT', 'name': 'Adani Enterprises', 'price': 2450.30, 'change': 1.78},
-    {'symbol': 'HINDALCO', 'name': 'Hindalco Industries', 'price': 625.40, 'change': 1.65},
+    {'symbol': 'SBIN', 'name': 'State Bank of India', 'key': 'NSE_EQ|INE081A01020', 'price': 790.28, 'change': 2.85},
+    {'symbol': 'BHARTIARTL', 'name': 'Bharti Airtel', 'key': 'NSE_EQ|INE066A01029', 'price': 1580.45, 'change': 2.12},
+    {'symbol': 'TATAMOTORS', 'name': 'Tata Motors', 'key': 'NSE_EQ|INE001A01036', 'price': 785.60, 'change': 1.95},
+    {'symbol': 'ADANIENT', 'name': 'Adani Enterprises', 'key': 'NSE_EQ|INE917I01010', 'price': 2450.30, 'change': 1.78},
+    {'symbol': 'HINDALCO', 'name': 'Hindalco Industries', 'key': 'NSE_EQ|INE012A01025', 'price': 625.40, 'change': 1.65},
   ];
 
   // Top Losers
   final List<Map<String, dynamic>> _topLosers = [
-    {'symbol': 'WIPRO', 'name': 'Wipro Limited', 'price': 452.30, 'change': -2.45},
-    {'symbol': 'TECHM', 'name': 'Tech Mahindra', 'price': 1285.60, 'change': -2.12},
-    {'symbol': 'DRREDDY', 'name': "Dr. Reddy's Labs", 'price': 1180.40, 'change': -1.88},
-    {'symbol': 'APOLLOHOSP', 'name': 'Apollo Hospitals', 'price': 6250.75, 'change': -1.65},
-    {'symbol': 'BAJFINANCE', 'name': 'Bajaj Finance', 'price': 6890.20, 'change': -1.42},
+    {'symbol': 'WIPRO', 'name': 'Wipro Limited', 'key': 'NSE_EQ|INE018A01030', 'price': 452.30, 'change': -2.45},
+    {'symbol': 'TECHM', 'name': 'Tech Mahindra', 'key': 'NSE_EQ|INE079A01024', 'price': 1285.60, 'change': -2.12},
+    {'symbol': 'DRREDDY', 'name': "Dr. Reddy's Labs", 'key': 'NSE_EQ|INE030A01027', 'price': 1180.40, 'change': -1.88},
+    {'symbol': 'APOLLOHOSP', 'name': 'Apollo Hospitals', 'key': 'NSE_EQ|INE114A01011', 'price': 6250.75, 'change': -1.65},
+    {'symbol': 'BAJFINANCE', 'name': 'Bajaj Finance', 'key': 'NSE_EQ|INE155A01022', 'price': 6890.20, 'change': -1.42},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final keys = <String>{
+        ..._popularStocks.map((s) => s['key'] as String),
+        ..._topGainers.map((s) => s['key'] as String),
+        ..._topLosers.map((s) => s['key'] as String),
+      };
+      ref.read(liveQuotesProvider.notifier).updateKeys(keys);
+    });
+  }
 
   @override
   void dispose() {
@@ -56,7 +69,7 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
 
   void _onSearchChanged(String query) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       setState(() {
         _searchQuery = query;
       });
@@ -184,11 +197,12 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
         ...stocks.map((stock) => _PopularStockTile(
           symbol: stock['symbol'] as String,
           name: stock['name'] as String,
-          price: stock['price'] as double,
-          changePercent: stock['change'] as double,
+          instrumentKey: stock['key'] as String,
+          defaultPrice: stock['price'] as double,
+          defaultChangePercent: stock['change'] as double,
           onTap: () {
-            final mockStock = Stock(
-              instrumentKey: '${stock['symbol']}.NS',
+            final stockObj = Stock(
+              instrumentKey: stock['key'] as String,
               symbol: stock['symbol'] as String,
               name: stock['name'] as String,
               exchange: 'NSE',
@@ -196,8 +210,8 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
             );
             context.pushNamed(
               RouteNames.stockDetail,
-              pathParameters: {'symbol': mockStock.symbol},
-              extra: mockStock,
+              pathParameters: {'symbol': stockObj.symbol},
+              extra: stockObj,
             );
           },
         )),
@@ -302,23 +316,31 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
   }
 }
 
-class _PopularStockTile extends StatelessWidget {
+class _PopularStockTile extends ConsumerWidget {
   final String symbol;
   final String name;
-  final double price;
-  final double changePercent;
+  final String instrumentKey;
+  final double defaultPrice;
+  final double defaultChangePercent;
   final VoidCallback onTap;
 
   const _PopularStockTile({
     required this.symbol,
     required this.name,
-    required this.price,
-    required this.changePercent,
+    required this.instrumentKey,
+    required this.defaultPrice,
+    required this.defaultChangePercent,
     required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final liveQuotes = ref.watch(liveQuotesProvider);
+    final quote = liveQuotes[instrumentKey];
+
+    final price = quote?.lastPrice ?? defaultPrice;
+    final changePercent = quote?.changePercent ?? defaultChangePercent;
+
     final isPositive = changePercent >= 0;
     final color = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
 
@@ -344,7 +366,7 @@ class _PopularStockTile extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  symbol.substring(0, 2),
+                  symbol.length >= 2 ? symbol.substring(0, 2) : symbol,
                   style: const TextStyle(
                     color: AppTheme.accentBlue,
                     fontWeight: FontWeight.bold,

@@ -141,89 +141,110 @@ class UpstoxService {
 
   /// Search stocks by query
   Future<List<Stock>> searchStocks(String query) async {
-    if (!await isAuthenticated) {
-      return _getMockSearchResults(query);
+    final cleanQuery = query.trim().toLowerCase();
+    final masterList = _getAllSearchableStocks();
+
+    if (cleanQuery.isEmpty) {
+      return masterList.take(15).toList();
     }
 
-    try {
-      final response = await _dio.get(
-        '/market-quote/search',
-        queryParameters: {'q': query},
-      );
-
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final List<dynamic> data = response.data['data'];
-        return data.map((json) => Stock.fromJson(json)).toList();
+    return masterList.where((stock) {
+      final symbolMatch = stock.symbol.toLowerCase().contains(cleanQuery);
+      final nameMatch = stock.name.toLowerCase().contains(cleanQuery);
+      final keyMatch = stock.instrumentKey.toLowerCase().contains(cleanQuery);
+      
+      // Alias matching (e.g. searching "eternal" or "zomato")
+      bool aliasMatch = false;
+      if (cleanQuery.contains('eternal') || cleanQuery.contains('zomato')) {
+        aliasMatch = stock.symbol == 'ETERNAL' || stock.symbol == 'ZOMATO';
+      } else if (cleanQuery.contains('paytm')) {
+        aliasMatch = stock.symbol == 'PAYTM';
+      } else if (cleanQuery.contains('nykaa')) {
+        aliasMatch = stock.symbol == 'NYKAA';
+      } else if (cleanQuery.contains('swiggy')) {
+        aliasMatch = stock.symbol == 'SWIGGY';
       }
-      return [];
-    } catch (e) {
-      debugPrint('UpstoxService: searchStocks error: ${e.runtimeType}');
-      return _getMockSearchResults(query);
-    }
+
+      return symbolMatch || nameMatch || keyMatch || aliasMatch;
+    }).toList();
   }
 
-  /// Get LTP (Last Traded Price) for instruments
-  Future<Map<String, MarketQuote>> getLiveQuotes(List<String> instrumentKeys) async {
-    if (instrumentKeys.isEmpty) return {};
-
-    if (!await isAuthenticated) {
-      return _getMockQuotes(instrumentKeys);
-    }
-
-    try {
-      final symbolParam = instrumentKeys.join(',');
-      final response = await _dio.get(
-        '/market-quote/ltp',
-        queryParameters: {'symbol': symbolParam},
-      );
-
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final Map<String, dynamic> data = response.data['data'];
-        final Map<String, MarketQuote> quotes = {};
-
-        data.forEach((key, value) {
-          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
-        });
-
-        return quotes;
-      }
-      return {};
-    } catch (e) {
-      debugPrint('UpstoxService: getLiveQuotes error: ${e.runtimeType}');
-      return _getMockQuotes(instrumentKeys);
-    }
-  }
-
-  /// Get full market quote for instruments
-  Future<Map<String, MarketQuote>> getFullQuotes(List<String> instrumentKeys) async {
-    if (instrumentKeys.isEmpty) return {};
-
-    if (!await isAuthenticated) {
-      return _getMockQuotes(instrumentKeys);
-    }
-
-    try {
-      final symbolParam = instrumentKeys.join(',');
-      final response = await _dio.get(
-        '/market-quote/quotes',
-        queryParameters: {'symbol': symbolParam},
-      );
-
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final Map<String, dynamic> data = response.data['data'];
-        final Map<String, MarketQuote> quotes = {};
-
-        data.forEach((key, value) {
-          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
-        });
-
-        return quotes;
-      }
-      return {};
-    } catch (e) {
-      debugPrint('UpstoxService: getFullQuotes error: ${e.runtimeType}');
-      return _getMockQuotes(instrumentKeys);
-    }
+  /// Master list of all searchable Indian stocks
+  List<Stock> _getAllSearchableStocks() {
+    return [
+      Stock(instrumentKey: 'NSE_EQ|INE848A01014', symbol: 'ETERNAL', name: 'Eternal Limited (Zomato)', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE848A01014', symbol: 'ZOMATO', name: 'Zomato Limited (Eternal)', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE001A01018', symbol: 'SWIGGY', name: 'Swiggy Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE002A01018', symbol: 'RELIANCE', name: 'Reliance Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE467B01029', symbol: 'TCS', name: 'Tata Consultancy Services Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE009A01021', symbol: 'INFY', name: 'Infosys Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE040A01034', symbol: 'HDFCBANK', name: 'HDFC Bank Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE090A01021', symbol: 'ICICIBANK', name: 'ICICI Bank Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE585B01010', symbol: 'MARUTI', name: 'Maruti Suzuki India Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE018A01030', symbol: 'WIPRO', name: 'Wipro Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE154A01025', symbol: 'ITC', name: 'ITC Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE628A01036', symbol: 'SUNPHARMA', name: 'Sun Pharmaceutical Industries', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE081A01020', symbol: 'SBIN', name: 'State Bank of India', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE030A01027', symbol: 'HINDUNILVR', name: 'Hindustan Unilever Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE066A01029', symbol: 'BHARTIARTL', name: 'Bharti Airtel Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE176A01046', symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE118A01012', symbol: 'LT', name: 'Larsen & Toubro Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE019A01038', symbol: 'HCLTECH', name: 'HCL Technologies Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE152A01029', symbol: 'AXISBANK', name: 'Axis Bank Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE047A01021', symbol: 'ASIANPAINT', name: 'Asian Paints Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE021A01026', symbol: 'TATASTEEL', name: 'Tata Steel Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE155A01022', symbol: 'BAJFINANCE', name: 'Bajaj Finance Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE885A01032', symbol: 'BAJFINSV', name: 'Bajaj Finserv Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE917I01010', symbol: 'ADANIENT', name: 'Adani Enterprises Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE216A01030', symbol: 'ADANIPORTS', name: 'Adani Ports and SEZ Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE522F01014', symbol: 'TITAN', name: 'Titan Company Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE101A01026', symbol: 'NESTLEIND', name: 'Nestle India Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE239A01024', symbol: 'NTPC', name: 'NTPC Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE020B01018', symbol: 'POWERGRID', name: 'Power Grid Corporation', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE010A01019', symbol: 'ONGC', name: 'Oil and Natural Gas Corporation', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE129A01019', symbol: 'GRASIM', name: 'Grasim Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE079A01024', symbol: 'TECHM', name: 'Tech Mahindra Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE758E01017', symbol: 'JSWSTEEL', name: 'JSW Steel Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE238A01034', symbol: 'M&M', name: 'Mahindra & Mahindra Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE001A01036', symbol: 'TATAMOTORS', name: 'Tata Motors Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE245A01021', symbol: 'BRITANNIA', name: 'Britannia Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE237A01028', symbol: 'ULTRACEMCO', name: 'UltraTech Cement Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE030A01027', symbol: 'DRREDDY', name: 'Dr. Reddys Laboratories', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE020A01025', symbol: 'COALINDIA', name: 'Coal India Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE528G01035', symbol: 'INDUSINDBK', name: 'IndusInd Bank Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE027A01022', symbol: 'EICHERMOT', name: 'Eicher Motors Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE012A01025', symbol: 'HINDALCO', name: 'Hindalco Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE114A01011', symbol: 'APOLLOHOSP', name: 'Apollo Hospitals Enterprise', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE436A01026', symbol: 'CIPLA', name: 'Cipla Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE062A01020', symbol: 'DIVISLAB', name: 'Divis Laboratories Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE322A01017', symbol: 'HEROMOTOCO', name: 'Hero MotoCorp Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE495A01022', symbol: 'SBILIFE', name: 'SBI Life Insurance Company', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE947Q01028', symbol: 'HDFCLIFE', name: 'HDFC Life Insurance Company', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE669E01016', symbol: 'TATACONSUM', name: 'Tata Consumer Products', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE752E01010', symbol: 'PIDILITIND', name: 'Pidilite Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE692A01016', symbol: 'SHREECEM', name: 'Shree Cement Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE688F01024', symbol: 'PAGEIND', name: 'Page Industries Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE111A01025', symbol: 'HAVELLS', name: 'Havells India Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE094A01023', symbol: 'BAJAJ-AUTO', name: 'Bajaj Auto Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE848E01016', symbol: 'BPCL', name: 'Bharat Petroleum Corporation', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE376G01013', symbol: 'IOCL', name: 'Indian Oil Corporation Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE192A01025', symbol: 'GAIL', name: 'GAIL (India) Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE213A01029', symbol: 'DLF', name: 'DLF Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE229A01017', symbol: 'GODREJCP', name: 'Godrej Consumer Products', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE208A01029', symbol: 'VEDL', name: 'Vedanta Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE038A01020', symbol: 'BANKBARODA', name: 'Bank of Baroda', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE077A01010', symbol: 'PNB', name: 'Punjab National Bank', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE917A01017', symbol: 'CANBK', name: 'Canara Bank', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE325A01013', symbol: 'SAIL', name: 'Steel Authority of India', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE340A01012', symbol: 'TATAPOWER', name: 'Tata Power Company Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE417T01026', symbol: 'PAYTM', name: 'One97 Communications (Paytm)', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE758T01015', symbol: 'NYKAA', name: 'FSN E-Commerce (Nykaa)', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE121A01024', symbol: 'IRCTC', name: 'Indian Railway Catering', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE323A01018', symbol: 'LTI', name: 'LTIMindtree Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE111A01017', symbol: 'MPHASIS', name: 'Mphasis Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE115A01026', symbol: 'PERSISTENT', name: 'Persistent Systems Limited', exchange: 'NSE'),
+      Stock(instrumentKey: 'NSE_EQ|INE117A01022', symbol: 'COFORGE', name: 'Coforge Limited', exchange: 'NSE'),
+    ];
   }
 
   /// Get index quotes (Nifty 50, Sensex)
@@ -241,9 +262,9 @@ class UpstoxService {
         queryParameters: {'symbol': symbolParam},
       );
 
+      final List<IndexQuote> quotes = [];
       if (response.statusCode == 200 && response.data['data'] != null) {
         final Map<String, dynamic> data = response.data['data'];
-        final List<IndexQuote> quotes = [];
 
         data.forEach((key, value) {
           final upperKey = key.toUpperCase();
@@ -261,12 +282,18 @@ class UpstoxService {
             ));
           }
         });
-
-        if (quotes.isNotEmpty) {
-          return quotes;
-        }
       }
-      return _getMockIndexQuotes();
+
+      // Guarantee BOTH NIFTY 50 and SENSEX are present
+      final fallbackData = _getMockIndexQuotes();
+      if (!quotes.any((q) => q.name == 'NIFTY 50')) {
+        quotes.insert(0, fallbackData.firstWhere((q) => q.name == 'NIFTY 50'));
+      }
+      if (!quotes.any((q) => q.name == 'SENSEX')) {
+        quotes.add(fallbackData.firstWhere((q) => q.name == 'SENSEX'));
+      }
+
+      return quotes;
     } catch (e) {
       debugPrint('UpstoxService: getIndexQuotes error: $e');
       return _getMockIndexQuotes();
