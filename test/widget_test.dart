@@ -6,9 +6,9 @@ void main() {
   testWidgets('App initializes correctly', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: PurpleTomatoApp(),
+        child: VirtualTradingApp(),
       ),
     );
-    expect(find.byType(PurpleTomatoApp), findsOneWidget);
+    expect(find.byType(VirtualTradingApp), findsOneWidget);
   });
 }
