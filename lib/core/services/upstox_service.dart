@@ -247,6 +247,70 @@ class UpstoxService {
     ];
   }
 
+  /// Get LTP (Last Traded Price) for instruments
+  Future<Map<String, MarketQuote>> getLiveQuotes(List<String> instrumentKeys) async {
+    if (instrumentKeys.isEmpty) return {};
+
+    if (!await isAuthenticated) {
+      return _getMockQuotes(instrumentKeys);
+    }
+
+    try {
+      final symbolParam = instrumentKeys.join(',');
+      final response = await _dio.get(
+        '/market-quote/ltp',
+        queryParameters: {'symbol': symbolParam},
+      );
+
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final Map<String, dynamic> data = response.data['data'];
+        final Map<String, MarketQuote> quotes = {};
+
+        data.forEach((key, value) {
+          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
+        });
+
+        return quotes;
+      }
+      return {};
+    } catch (e) {
+      debugPrint('UpstoxService: getLiveQuotes error: $e');
+      return _getMockQuotes(instrumentKeys);
+    }
+  }
+
+  /// Get full market quote for instruments
+  Future<Map<String, MarketQuote>> getFullQuotes(List<String> instrumentKeys) async {
+    if (instrumentKeys.isEmpty) return {};
+
+    if (!await isAuthenticated) {
+      return _getMockQuotes(instrumentKeys);
+    }
+
+    try {
+      final symbolParam = instrumentKeys.join(',');
+      final response = await _dio.get(
+        '/market-quote/quotes',
+        queryParameters: {'symbol': symbolParam},
+      );
+
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final Map<String, dynamic> data = response.data['data'];
+        final Map<String, MarketQuote> quotes = {};
+
+        data.forEach((key, value) {
+          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
+        });
+
+        return quotes;
+      }
+      return {};
+    } catch (e) {
+      debugPrint('UpstoxService: getFullQuotes error: $e');
+      return _getMockQuotes(instrumentKeys);
+    }
+  }
+
   /// Get index quotes (Nifty 50, Sensex)
   Future<List<IndexQuote>> getIndexQuotes() async {
     if (!await isAuthenticated) {
