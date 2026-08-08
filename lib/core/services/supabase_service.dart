@@ -253,7 +253,12 @@ class SupabaseService {
 
   // ============ EDGE FUNCTION GATEWAY METHODS ============
 
-  /// Invoke Supabase Edge Function to exchange Upstox OAuth code securely
+  /// Invoke Supabase Edge Function to exchange Upstox OAuth code securely.
+  ///
+  /// Returns the access token on success.
+  /// Throws an [Exception] with a descriptive message on failure — this
+  /// prevents the caller from wasting the one-time auth code on a fallback
+  /// path that would also fail.
   static Future<String?> exchangeUpstoxCodeViaEdgeGateway({
     required String code,
     required String redirectUri,
@@ -273,12 +278,41 @@ class SupabaseService {
       );
 
       final data = response.data;
-      if (data != null && data['access_token'] != null) {
+      debugPrint('Edge Gateway response data: $data');
+
+      if (data == null) {
+        debugPrint('Edge Gateway returned null data');
+        return null; // let caller try fallback
+      }
+
+      // Success path
+      if (data['access_token'] != null) {
         return data['access_token'].toString();
       }
+
+      // Error path — Upstox was reached but rejected the request.
+      // The auth code is now CONSUMED; retrying with the same code will fail.
+      // Throw so the caller does NOT waste the code on a second attempt.
+      String errorDetail = 'Unknown error from Upstox';
+      if (data['details'] is Map) {
+        final details = data['details'] as Map;
+        if (details['errors'] is List && (details['errors'] as List).isNotEmpty) {
+          final firstErr = (details['errors'] as List)[0];
+          errorDetail = '${firstErr['error_code'] ?? firstErr['errorCode'] ?? ''}: ${firstErr['message'] ?? ''}';
+        } else if (details['message'] != null) {
+          errorDetail = details['message'].toString();
+        }
+      } else if (data['error'] != null) {
+        errorDetail = data['error'].toString();
+      }
+
+      throw Exception('Upstox token exchange failed (via Edge Function): $errorDetail');
+    } on Exception {
+      rethrow; // preserve our own exceptions
     } catch (e) {
       debugPrint('Edge Gateway Upstox OAuth exchange error: $e');
+      // Network / Supabase connectivity errors — safe to try fallback
+      return null;
     }
-    return null;
   }
 }
