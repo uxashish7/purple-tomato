@@ -5,6 +5,10 @@
     "installCommand": "echo 'Dependencies installed in build step'",
     "rewrites": [
         {
+            "source": "/api/upstox-token",
+            "destination": "https://api.upstox.com/v2/login/authorization/token"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

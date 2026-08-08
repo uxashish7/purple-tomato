@@ -49,12 +49,13 @@ class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
         state = UpstoxAuthState.authenticated;
         return true;
       } else {
-        _errorMessage = 'Failed to get access token';
+        _errorMessage = 'Failed to get access token from Upstox';
         state = UpstoxAuthState.error;
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Authentication error: $e';
+      final cleanMsg = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = cleanMsg;
       state = UpstoxAuthState.error;
       return false;
     }

@@ -76,8 +76,9 @@ class _CallbackScreenState extends ConsumerState<CallbackScreen> {
           );
         }
       } else {
+        final detailedError = ref.read(upstoxAuthProvider.notifier).errorMessage;
         setState(() {
-          _error = 'Failed to exchange authorization code';
+          _error = detailedError ?? 'Failed to exchange authorization code';
           _isProcessing = false;
         });
       }

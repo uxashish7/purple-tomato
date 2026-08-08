@@ -49,6 +49,7 @@ class UpstoxService {
   /// Exchange authorization code for access token
   Future<String?> exchangeCodeForToken(String code) async {
     try {
+      debugPrint('UpstoxService: Exchanging code via Edge Function (redirectUri: ${ApiConfig.upstoxRedirectUri})...');
       // 1. Try Supabase Edge Function Gateway first to avoid exposing client secret in web JS bundles
       if (SupabaseService.isAvailable) {
         final token = await SupabaseService.exchangeUpstoxCodeViaEdgeGateway(
@@ -61,9 +62,14 @@ class UpstoxService {
         }
       }
 
-      // 2. Direct fallback (for local mobile dev)
+      debugPrint('UpstoxService: Falling back to server proxy token exchange...');
+      // 2. Direct fallback (use Vercel serverless proxy on Web to bypass browser CORS)
+      final tokenEndpoint = kIsWeb
+          ? '/api/upstox-token'
+          : 'https://api.upstox.com/v2/login/authorization/token';
+
       final response = await _dio.post(
-        '/login/authorization/token',
+        tokenEndpoint,
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           validateStatus: (status) => true,
@@ -77,22 +83,31 @@ class UpstoxService {
         },
       );
 
-      if (response.statusCode == 200 && response.data['access_token'] != null) {
+      debugPrint('UpstoxService: Direct exchange status: ${response.statusCode}');
+
+      if (response.statusCode == 200 && response.data != null && response.data['access_token'] != null) {
         final token = response.data['access_token'] as String;
         await HiveService.saveAccessToken(token);
         return token;
       }
 
-      return null;
+      if (response.data != null) {
+        debugPrint('Upstox error response: ${response.data}');
+        if (response.data is Map && response.data['errors'] != null && (response.data['errors'] as List).isNotEmpty) {
+          final firstError = response.data['errors'][0];
+          final msg = firstError['message'] ?? firstError['error_code'] ?? 'Exchange failed';
+          throw Exception('Upstox API Error: $msg');
+        }
+      }
+
+      throw Exception('Server returned status ${response.statusCode}');
     } on DioException catch (e) {
-      // Log non-sensitive error details only
       final status = e.response?.statusCode;
-      final type = e.type.toString();
-      debugPrint('UpstoxService: Token exchange DioException [$type] status=$status');
-      return null;
+      debugPrint('UpstoxService: Token exchange DioException status=$status response=${e.response?.data}');
+      rethrow;
     } catch (e) {
-      debugPrint('UpstoxService: Token exchange unexpected error: ${e.runtimeType}');
-      return null;
+      debugPrint('UpstoxService: Token exchange error: $e');
+      rethrow;
     }
   }
 
