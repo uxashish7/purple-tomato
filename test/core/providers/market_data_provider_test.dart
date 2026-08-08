@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purple_tomato/core/providers/market_data_provider.dart';
 import 'package:purple_tomato/core/services/upstox_service.dart';
+import 'package:purple_tomato/domain/models/market_quote.dart';
 
 // Create a simple mock for UpstoxService
 class MockUpstoxService extends UpstoxService {

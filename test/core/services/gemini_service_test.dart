@@ -30,7 +30,13 @@ void main() {
       );
       
       final holdings = [
-        Holding(stock: stock, quantity: 10, avgBuyPrice: 2500.0)
+        Holding(
+          id: 'test-1',
+          stock: stock,
+          quantity: 10,
+          avgBuyPrice: 2500.0,
+          purchaseDate: DateTime(2025, 1, 1),
+        )
       ];
 
       final analysis = await geminiService.analyzePortfolio(holdings, {'NSE_EQ|INE002A01018': 2600.0});

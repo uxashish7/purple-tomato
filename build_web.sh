@@ -12,7 +12,7 @@ echo "=== Getting Dependencies ==="
 flutter pub get
 
 echo "=== Building Web ==="
-flutter build web --release \
+flutter build web --release --no-tree-shake-icons \
   --dart-define=UPSTOX_API_KEY="$UPSTOX_API_KEY" \
   --dart-define=UPSTOX_API_SECRET="$UPSTOX_API_SECRET" \
   --dart-define=UPSTOX_REDIRECT_URI="$UPSTOX_REDIRECT_URI" \
