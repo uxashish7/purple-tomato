@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/upstox_service.dart';
 import '../services/hive_service.dart';
-import 'market_data_provider.dart' show upstoxServiceProvider;
+import 'market_data_provider.dart';
 
 /// Auth state for Upstox connection
 enum UpstoxAuthState {
@@ -15,9 +15,10 @@ enum UpstoxAuthState {
 /// Upstox auth state notifier
 class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
   final UpstoxService _service;
+  final Ref _ref;
   String? _errorMessage;
 
-  UpstoxAuthNotifier(this._service) : super(UpstoxAuthState.initial) {
+  UpstoxAuthNotifier(this._service, this._ref) : super(UpstoxAuthState.initial) {
     _checkAuthStatus();
   }
 
@@ -45,9 +46,17 @@ class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
 
     try {
       final token = await _service.exchangeCodeForToken(code);
-      
+
       if (token != null) {
         state = UpstoxAuthState.authenticated;
+
+        // Immediately refresh all market data now that a valid token is available.
+        // This avoids waiting up to 5 seconds for the polling timer to fire.
+        try {
+          _ref.read(indexQuotesProvider.notifier).refresh();
+          _ref.read(liveQuotesProvider.notifier).refresh();
+        } catch (_) {} // Providers may not yet exist on first launch
+
         return true;
       } else {
         _errorMessage = 'Failed to get access token from Upstox';
@@ -82,10 +91,11 @@ class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
 
 /// Provider for Upstox auth state
 /// Uses the shared [upstoxServiceProvider] instance so auth and market data
-/// share the same Dio client — fixing the split-instance Bug #1.
+/// share the same Dio client. Also holds a Ref so it can trigger market data
+/// refresh immediately after a successful token exchange.
 final upstoxAuthProvider = StateNotifierProvider<UpstoxAuthNotifier, UpstoxAuthState>((ref) {
   final service = ref.watch(upstoxServiceProvider);
-  return UpstoxAuthNotifier(service);
+  return UpstoxAuthNotifier(service, ref);
 });
 
 /// Provider to check if using mock mode

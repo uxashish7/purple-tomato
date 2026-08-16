@@ -10,10 +10,13 @@ import '../utils/app_logger.dart';
 import 'watchlist_provider.dart';
 import 'portfolio_provider.dart';
 
-/// Single shared Upstox service instance used by ALL providers.
-/// Previously, upstoxAuthProvider created a separate UpstoxService instance
-/// which meant auth and market data were fully disconnected (Bug #1 fix).
+/// Single shared UpstoxService — kept alive for the entire app lifetime.
+/// ref.keepAlive() prevents Riverpod from disposing and recreating the service
+/// on route changes, which would create a new Dio client that sends its first
+/// request without an Authorization header (token read is async), triggering
+/// a 401 that clears the stored token.
 final upstoxServiceProvider = Provider<UpstoxService>((ref) {
+  ref.keepAlive();
   return UpstoxService();
 });
 

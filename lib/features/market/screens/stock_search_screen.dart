@@ -267,17 +267,28 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppTheme.accentBlue),
       ),
-      error: (error, _) => Center(
+      error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, color: AppTheme.lossRed, size: 48),
             const SizedBox(height: 16),
             const Text(
-              'Failed to search stocks',
-              style: TextStyle(color: AppTheme.textPrimary),
+              'Search error',
+              style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                error.toString(),
+                style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                textAlign: TextAlign.center,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: () => ref.invalidate(stockSearchProvider(_searchQuery)),
               child: const Text('Retry'),
