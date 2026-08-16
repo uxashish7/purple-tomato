@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/upstox_service.dart';
 import '../services/hive_service.dart';
+import 'market_data_provider.dart' show upstoxServiceProvider;
 
 /// Auth state for Upstox connection
 enum UpstoxAuthState {
@@ -80,8 +81,10 @@ class UpstoxAuthNotifier extends StateNotifier<UpstoxAuthState> {
 }
 
 /// Provider for Upstox auth state
+/// Uses the shared [upstoxServiceProvider] instance so auth and market data
+/// share the same Dio client — fixing the split-instance Bug #1.
 final upstoxAuthProvider = StateNotifierProvider<UpstoxAuthNotifier, UpstoxAuthState>((ref) {
-  final service = UpstoxService();
+  final service = ref.watch(upstoxServiceProvider);
   return UpstoxAuthNotifier(service);
 });
 

@@ -7,6 +7,7 @@ import 'package:purple_tomato/core/providers/watchlist_provider.dart';
 import 'package:purple_tomato/shared/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purple_tomato/core/constants/route_names.dart';
+import 'package:intl/intl.dart';
 
 class StockSearchScreen extends ConsumerStatefulWidget {
   const StockSearchScreen({super.key});
@@ -222,20 +223,23 @@ class _StockSearchScreenState extends ConsumerState<StockSearchScreen> {
 
   Widget _buildSearchResults(AsyncValue<List<dynamic>> searchResults) {
     return searchResults.when(
-      data: (stocks) {
-        if (stocks.isEmpty) {
+      data: (results) {
+        if (results.isEmpty) {
           return _buildNoResults();
         }
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: stocks.length,
+          itemCount: results.length,
           itemBuilder: (context, index) {
-            final stock = stocks[index] as Stock;
+            final result = results[index] as StockSearchResult;
+            final stock = result.stock;
             final isInWatchlist = ref.watch(isInWatchlistProvider(stock.instrumentKey));
-            
+
             return _SearchResultTile(
               stock: stock,
               isInWatchlist: isInWatchlist,
+              lastPrice: result.lastPrice,
+              changePercent: result.changePercent,
               onTap: () {
                 context.pushNamed(
                   RouteNames.stockDetail,
@@ -433,6 +437,8 @@ class _PopularStockTile extends ConsumerWidget {
 class _SearchResultTile extends StatelessWidget {
   final Stock stock;
   final bool isInWatchlist;
+  final double? lastPrice;
+  final double? changePercent;
   final VoidCallback onTap;
   final VoidCallback onWatchlistTap;
 
@@ -441,10 +447,17 @@ class _SearchResultTile extends StatelessWidget {
     required this.isInWatchlist,
     required this.onTap,
     required this.onWatchlistTap,
+    this.lastPrice,
+    this.changePercent,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasPrice = lastPrice != null;
+    final isPositive = (changePercent ?? 0) >= 0;
+    final priceColor = isPositive ? AppTheme.profitGreen : AppTheme.lossRed;
+    final fmt = NumberFormat('#,##,##0.00', 'en_IN');
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -502,7 +515,30 @@ class _SearchResultTile extends StatelessWidget {
                 ],
               ),
             ),
-            // Watchlist button
+            // Price column (live if available)
+            if (hasPrice)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\u20b9${fmt.format(lastPrice)}',
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    '${isPositive ? '+' : ''}${changePercent!.toStringAsFixed(2)}%',
+                    style: TextStyle(
+                      color: priceColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            // Watchlist toggle
             IconButton(
               icon: Icon(
                 isInWatchlist ? Icons.bookmark : Icons.bookmark_outline,

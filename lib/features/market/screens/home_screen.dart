@@ -216,7 +216,7 @@ class _HomeContent extends ConsumerWidget {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             icon: const Icon(Icons.refresh, size: 20),
             onPressed: () {
-              ref.invalidate(indexQuotesProvider);
+              ref.read(indexQuotesProvider.notifier).refresh();
             },
           ),
           // Market status indicator
@@ -254,7 +254,7 @@ class _HomeContent extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(indexQuotesProvider);
+          ref.read(indexQuotesProvider.notifier).refresh();
         },
         child: Align(
           alignment: Alignment.topCenter,
