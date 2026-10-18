@@ -153,7 +153,7 @@ Respond naturally to the user's message:
       return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
     } catch (e) {
       AppLogger.error('Chat error', tag: 'GeminiService', error: e);
-      return '⚠️ AI temporarily unavailable. Please try again in a moment.';
+      return _getMockChatResponse(userMessage, portfolioContext);
     }
   }
 
@@ -218,7 +218,11 @@ Respond naturally to the user's message:
       return response.text ?? 'Sorry, I couldn\'t process that. Please try again.';
     } catch (e) {
       AppLogger.error('chatWithAttachments error', tag: 'GeminiService', error: e);
-      return '⚠️ AI temporarily unavailable. Please try again in a moment.';
+      final mock = _getMockChatResponse(userMessage, portfolioContext);
+      if (imageBytes != null || pdfBytes != null) {
+        return '$mock\n\n*(Note: Attachment analysis is temporarily unavailable; showing educational simulation.)*';
+      }
+      return mock;
     }
   }
 

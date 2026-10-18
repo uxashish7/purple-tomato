@@ -347,7 +347,11 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  _isTyping ? 'Typing...' : 'Powered by Gemini',
+                  _isTyping
+                      ? 'Typing...'
+                      : (ApiConfig.isGeminiConfigured
+                          ? 'Powered by Gemini'
+                          : 'Virtual Advisor Mode'),
                   style: TextStyle(
                     fontSize: 11,
                     color: _isTyping ? AppTheme.profitGreen : AppTheme.textMuted,

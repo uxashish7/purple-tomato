@@ -57,8 +57,11 @@ class ApiConfig {
     defaultValue: '',
   );
 
-  /// Gemini Model to use
-  static const String geminiModel = 'gemini-2.5-flash';
+  /// Gemini Model to use (defaults to official stable 'gemini-1.5-flash')
+  static const String geminiModel = String.fromEnvironment(
+    'GEMINI_MODEL',
+    defaultValue: 'gemini-1.5-flash',
+  );
 
   // ============ SUPABASE CONFIGURATION ============
 
@@ -119,8 +122,12 @@ class ApiConfig {
       upstoxApiKey.isNotEmpty &&
       upstoxApiSecret.isNotEmpty;
 
-  /// Check if Gemini is configured (API key provided via environment)
-  static bool get isGeminiConfigured => geminiApiKey.isNotEmpty;
+  /// Check if Gemini is configured (API key provided via environment and not a placeholder/unsupported token)
+  static bool get isGeminiConfigured =>
+      geminiApiKey.isNotEmpty &&
+      !geminiApiKey.startsWith('your_') &&
+      !geminiApiKey.startsWith('AQ.') &&
+      geminiApiKey != 'YOUR_GEMINI_API_KEY';
 
   /// Check if Supabase is configured
   static bool get isSupabaseConfigured =>
