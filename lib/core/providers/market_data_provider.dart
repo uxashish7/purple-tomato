@@ -235,14 +235,11 @@ final stockSearchProvider =
   final keys = stocks.map((s) => s.instrumentKey).toSet();
   ref.read(liveQuotesProvider.notifier).addKeys(keys);
 
-  // 3. Fetch live LTP directly so prices appear immediately in search results
+  // 3. Fetch LTP directly so prices appear immediately in search results
   Map<String, MarketQuote> quotes = {};
   try {
-    if (await service.isAuthenticated) {
-      debugPrint('StockSearch: Fetching live LTP for ${keys.length} stocks');
-      quotes = await service.getLiveQuotes(keys.toList());
-      debugPrint('StockSearch: Got ${quotes.length} live quotes');
-    }
+    quotes = await service.getLiveQuotes(keys.toList());
+    debugPrint('StockSearch: Got ${quotes.length} quotes for search results');
   } catch (e) {
     debugPrint('StockSearch: LTP fetch failed — $e');
   }

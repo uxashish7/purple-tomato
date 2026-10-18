@@ -28,15 +28,26 @@ class MarketQuote {
 
   factory MarketQuote.fromUpstoxJson(String instrumentKey, Map<String, dynamic> json) {
     final ohlc = json['ohlc'] ?? {};
+    final ltp = (json['last_price'] ?? json['ltp'] ?? 0).toDouble();
+    final cp = (json['cp'] ?? ohlc['close'] ?? 0).toDouble();
+    double netChange = (json['net_change'] ?? json['change'] ?? 0).toDouble();
+    if (netChange == 0 && cp > 0 && ltp > 0) {
+      netChange = ltp - cp;
+    }
+    double pChange = (json['percentage_change'] ?? json['pChange'] ?? 0).toDouble();
+    if (pChange == 0 && cp > 0 && netChange != 0) {
+      pChange = (netChange / cp) * 100;
+    }
+
     return MarketQuote(
-      instrumentKey: instrumentKey,
-      lastPrice: (json['last_price'] ?? json['ltp'] ?? 0).toDouble(),
-      change: (json['net_change'] ?? json['change'] ?? 0).toDouble(),
-      changePercent: (json['percentage_change'] ?? json['pChange'] ?? 0).toDouble(),
+      instrumentKey: json['instrument_token']?.toString() ?? instrumentKey,
+      lastPrice: ltp,
+      change: netChange,
+      changePercent: pChange,
       open: (ohlc['open'] ?? 0).toDouble(),
       high: (ohlc['high'] ?? 0).toDouble(),
       low: (ohlc['low'] ?? 0).toDouble(),
-      close: (ohlc['close'] ?? 0).toDouble(),
+      close: cp > 0 ? cp : (ohlc['close'] ?? 0).toDouble(),
       volume: json['volume'] ?? json['total_buy_quantity'] ?? 0,
       timestamp: json['last_trade_time'] != null
           ? DateTime.tryParse(json['last_trade_time'])
@@ -81,12 +92,23 @@ class IndexQuote {
   bool get isPositive => change >= 0;
 
   factory IndexQuote.fromUpstoxJson(String name, String instrumentKey, Map<String, dynamic> json) {
+    final ltp = (json['last_price'] ?? json['ltp'] ?? 0).toDouble();
+    final cp = (json['cp'] ?? 0).toDouble();
+    double netChange = (json['net_change'] ?? json['change'] ?? 0).toDouble();
+    if (netChange == 0 && cp > 0 && ltp > 0) {
+      netChange = ltp - cp;
+    }
+    double pChange = (json['percentage_change'] ?? json['pChange'] ?? 0).toDouble();
+    if (pChange == 0 && cp > 0 && netChange != 0) {
+      pChange = (netChange / cp) * 100;
+    }
+
     return IndexQuote(
       name: name,
       instrumentKey: instrumentKey,
-      value: (json['last_price'] ?? json['ltp'] ?? 0).toDouble(),
-      change: (json['net_change'] ?? json['change'] ?? 0).toDouble(),
-      changePercent: (json['percentage_change'] ?? json['pChange'] ?? 0).toDouble(),
+      value: ltp,
+      change: netChange,
+      changePercent: pChange,
     );
   }
 

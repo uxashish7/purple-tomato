@@ -260,7 +260,7 @@ class UpstoxService {
       final symbolParam = instrumentKeys.join(',');
       final response = await _dio.get(
         '/market-quote/ltp',
-        queryParameters: {'symbol': symbolParam},
+        queryParameters: {'instrument_key': symbolParam},
       );
 
       if (response.statusCode == 200 && response.data['data'] != null) {
@@ -268,12 +268,40 @@ class UpstoxService {
         final Map<String, MarketQuote> quotes = {};
 
         data.forEach((key, value) {
-          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
+          if (value is Map<String, dynamic>) {
+            final quote = MarketQuote.fromUpstoxJson(key, value);
+            // 1. Raw key returned by Upstox (e.g. 'NSE_EQ:RELIANCE')
+            quotes[key] = quote;
+            // 2. Pipe separator equivalent (e.g. 'NSE_EQ|RELIANCE')
+            quotes[key.replaceAll(':', '|')] = quote;
+            // 3. Colon separator equivalent
+            quotes[key.replaceAll('|', ':')] = quote;
+
+            // 4. If Upstox returned instrument_token (e.g. 'NSE_EQ|INE002A01018')
+            final token = value['instrument_token']?.toString();
+            if (token != null && token.isNotEmpty) {
+              quotes[token] = quote;
+              quotes[token.replaceAll(':', '|')] = quote;
+              quotes[token.replaceAll('|', ':')] = quote;
+            }
+
+            // 5. Bare symbol (e.g. 'RELIANCE')
+            final bareSymbol = key.split(RegExp(r'[:|]')).last;
+            quotes[bareSymbol] = quote;
+          }
         });
+
+        // Fill in any requested keys not returned by live API with mock fallback
+        for (final requestedKey in instrumentKeys) {
+          if (!quotes.containsKey(requestedKey)) {
+            final mock = _getMockQuotes([requestedKey])[requestedKey];
+            if (mock != null) quotes[requestedKey] = mock;
+          }
+        }
 
         return quotes;
       }
-      return {};
+      return _getMockQuotes(instrumentKeys);
     } catch (e) {
       debugPrint('UpstoxService: getLiveQuotes error: $e');
       return _getMockQuotes(instrumentKeys);
@@ -292,7 +320,7 @@ class UpstoxService {
       final symbolParam = instrumentKeys.join(',');
       final response = await _dio.get(
         '/market-quote/quotes',
-        queryParameters: {'symbol': symbolParam},
+        queryParameters: {'instrument_key': symbolParam},
       );
 
       if (response.statusCode == 200 && response.data['data'] != null) {
@@ -300,12 +328,34 @@ class UpstoxService {
         final Map<String, MarketQuote> quotes = {};
 
         data.forEach((key, value) {
-          quotes[key] = MarketQuote.fromUpstoxJson(key, value);
+          if (value is Map<String, dynamic>) {
+            final quote = MarketQuote.fromUpstoxJson(key, value);
+            quotes[key] = quote;
+            quotes[key.replaceAll(':', '|')] = quote;
+            quotes[key.replaceAll('|', ':')] = quote;
+
+            final token = value['instrument_token']?.toString();
+            if (token != null && token.isNotEmpty) {
+              quotes[token] = quote;
+              quotes[token.replaceAll(':', '|')] = quote;
+              quotes[token.replaceAll('|', ':')] = quote;
+            }
+
+            final bareSymbol = key.split(RegExp(r'[:|]')).last;
+            quotes[bareSymbol] = quote;
+          }
         });
+
+        for (final requestedKey in instrumentKeys) {
+          if (!quotes.containsKey(requestedKey)) {
+            final mock = _getMockQuotes([requestedKey])[requestedKey];
+            if (mock != null) quotes[requestedKey] = mock;
+          }
+        }
 
         return quotes;
       }
-      return {};
+      return _getMockQuotes(instrumentKeys);
     } catch (e) {
       debugPrint('UpstoxService: getFullQuotes error: $e');
       return _getMockQuotes(instrumentKeys);
@@ -324,7 +374,7 @@ class UpstoxService {
 
       final response = await _dio.get(
         '/market-quote/ltp',
-        queryParameters: {'symbol': symbolParam},
+        queryParameters: {'instrument_key': symbolParam},
       );
 
       final List<IndexQuote> quotes = [];
@@ -333,17 +383,18 @@ class UpstoxService {
 
         data.forEach((key, value) {
           final upperKey = key.toUpperCase();
+          final valMap = value is Map<String, dynamic> ? value : <String, dynamic>{};
           if (upperKey.contains('NIFTY') && !quotes.any((q) => q.name == 'NIFTY 50')) {
             quotes.add(IndexQuote.fromUpstoxJson(
               'NIFTY 50',
               ApiConfig.nifty50Key,
-              value is Map<String, dynamic> ? value : {},
+              valMap,
             ));
           } else if (upperKey.contains('SENSEX') && !quotes.any((q) => q.name == 'SENSEX')) {
             quotes.add(IndexQuote.fromUpstoxJson(
               'SENSEX',
               ApiConfig.sensexKey,
-              value is Map<String, dynamic> ? value : {},
+              valMap,
             ));
           }
         });
